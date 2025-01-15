@@ -1,4 +1,4 @@
-Require Import HOLLight_Real_With_N.logic HOLLight_Real_With_N.mappings BinNat.
+Require Import HOLLight_Real_With_N.mappings BinNat.
 Require Import HOLLight_Real_With_N.theory_hol.
 Definition _FALSITY_ : Prop := False.
 Lemma _FALSITY__def : _FALSITY_ = False.
