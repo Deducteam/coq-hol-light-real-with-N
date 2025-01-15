@@ -96,7 +96,7 @@ translate_proofs() {
     mkdir -p output
     cd output
     make $jobs clean-all || true
-    hol2dk config $base.ml $root_path ../../logic.v ../../mappings.v BinNat ../../deps.mk ../../erasing.lp
+    hol2dk config $base.ml $root_path ../../mappings.v BinNat ../../deps.mk ../../mappings.lp
     make split
     make $jobs lp
     make $jobs v
