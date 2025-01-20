@@ -122,11 +122,14 @@ check_proofs() {
 create_and_check_opam_library() {
     line
     echo create opam library ...
+    cd output
+    make sig opam
+    cd ..
     mkdir -p opam
     cd opam
+    cp ../../Makefile ../../mappings.v ../output/theory_hol.v .
     sed -e "s/${base}_//g" -e "/^Require Import ${root_path}.types.$/d" ../output/${base}_terms.v > terms.v
     sed -e "s/${base}_//g" -e "/^Require Import ${root_path}.types.$/d" -e '/^Require Import ${root_path}.axioms.$/d' ../output/${base}_opam.v > theorems.v
-    cp ../../logic.v ../../mappings.v ../output/theory_hol.v ../../Makefile .
     make
     cd ..
 }
