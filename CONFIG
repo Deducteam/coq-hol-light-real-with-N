@@ -1,2 +1,2 @@
 #!/bin/sh
-hol2dk config hol_upto_real.ml HOLLight_Real_With_N mappings.v BinNat deps.mk mappings.lp
+hol2dk config hol_upto_real.ml HOLLight_Real_With_N mappings.v mappings.mk mappings.lp
