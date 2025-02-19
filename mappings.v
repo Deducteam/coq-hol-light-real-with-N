@@ -42,12 +42,6 @@ Proof. rewrite h1, h2. reflexivity. Qed.
 Lemma EQ_MP {p q : Prop} (e : p = q) (h : p) : q.
 Proof. rewrite <- e. apply h. Qed.
 
-(*Lemma TRANS {a : Type'} {x y z : a} (xy : x = y) (yz : y = z) : x = z.
-Proof. exact (eq_trans xy yz). Qed.
-
-Lemma SYM {a : Type'} {x y : a} (xy : x = y) : y = x.
-Proof. exact (eq_sym xy). Qed.*)
-
 (****************************************************************************)
 (* Proof of some natural deduction rules. *)
 (****************************************************************************)
