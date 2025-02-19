@@ -91,10 +91,7 @@ Tactic Notation "intro_ext" simple_intropattern(e) :=
 Tactic Notation "intro_ext" simple_intropattern(e) ident(x) :=
   intro_ext e; gen_intro (ext_fun (e x)) e.
   
-Lemma align_ε (A : Type') (P : A -> Prop) a :
-  P a ->
-  (forall x, P x -> a = x) ->
-  a = ε P.
+Lemma align_ε (A : Type') (P : A -> Prop) a : P a -> (forall x, P x -> a = x) -> a = ε P.
 Proof.
   intros ha hg.
   apply hg. 
@@ -686,10 +683,6 @@ Proof.
     exact (mk_pair_inj h).
 Qed.
 
-(* Lemma ABS_prod_mk_pair_eta {A B : Type'} {x : A} {y : B} :
-  (x,y) = ABS_prod (fun a b => mk_pair x y a b).
-Proof. exact ABS_prod_mk_pair. Qed. *)
-
 Definition REP_prod : forall {A B : Type'}, (prod A B) -> A -> B -> Prop :=
   fun A B p a b => mk_pair (fst p) (snd p) a b.
 
@@ -1175,62 +1168,45 @@ Proof.
       exact (N.sub_succ_r x y).
 Qed.
 
-Definition GEQ {A : Type'} : A -> A -> Prop := fun a : A => fun b : A => a = b.
+(*Definition GEQ {A : Type'} : A -> A -> Prop := fun a : A => fun b : A => a = b.
 
 Lemma GEQ_def {A : Type'} : (@GEQ A) = (@eq A).
+Proof. ext x y. reflexivity. Qed.*)
+
+Require Import Coq.Arith.Factorial.
+
+Definition factN_of_nat x := N.of_nat (fact (N.to_nat x)).
+
+Lemma factN_of_nat0: factN_of_nat 0 = 1.
 Proof.
-  ext x y.
-  reflexivity.
-Qed.
-
-(*Lemma FACT_def : Factorial.fact = (@ε (arr (prod nat (prod nat (prod nat nat))) (arr nat nat')) (fun FACT' : (prod nat (prod nat (prod nat nat))) -> nat -> nat => forall _2944 : prod nat (prod nat (prod nat nat)), ((FACT' _2944 ( 0)) = ( (BIT1 0))) /\ (forall n : nat, (FACT' _2944 (S n)) = (Nat.mul (S n) (FACT' _2944 n)))) (@pair nat (prod nat (prod nat nat)) ( (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat (prod nat nat) ( (BIT1 (BIT0 (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat nat ( (BIT1 (BIT1 (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) ( (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))))))).
-Proof.
-  generalize (@pair nat (prod nat (prod nat nat)) ( (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat (prod nat nat) ( (BIT1 (BIT0 (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat nat ( (BIT1 (BIT1 (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) ( (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0))))))))))); generalize (prod nat (prod nat (prod nat nat))); intros A a.
-  match goal with [|- _ = ε ?x _] => set (Q := x) end.
-  assert (i : exists q, Q q). exists (fun _ => Factorial.fact). split; reflexivity.
-  generalize (ε_spec i a). intros [h0 hs].
-  apply fun_ext; intro x. induction x. rewrite h0. reflexivity. rewrite hs, <- IHx. reflexivity.
-Qed.*)
-
-Require Import Coq.Arith.Factorial Coq.micromega.Lia.
-
-Definition FACT : N -> N := @ε ((prod N (prod N (prod N N))) -> N -> N) (fun FACT' : (prod N (prod N (prod N N))) -> N -> N => forall _2944 : prod N (prod N (prod N N)), ((FACT' _2944 (NUMERAL 0%N)) = (NUMERAL (BIT1 0%N))) /\ (forall n : N, (FACT' _2944 (N.succ n)) = (N.mul (N.succ n) (FACT' _2944 n)))) (@pair N (prod N (prod N N)) (NUMERAL (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0%N)))))))) (@pair N (prod N N) (NUMERAL (BIT1 (BIT0 (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 0%N)))))))) (@pair N N (NUMERAL (BIT1 (BIT1 (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 0%N)))))))) (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0%N))))))))))).
-
-Definition NFACT x := N.of_nat (fact (N.to_nat x)).
-
-Lemma NFACT0: NFACT 0 = 1.
-Proof.
-  unfold NFACT.
+  unfold factN_of_nat.
   rewrite Nnat.N2Nat.inj_0.
   unfold fact.
   exact (Nnat.N2Nat.id 1).
 Qed.
 
-Lemma NFACTS: forall n : N, NFACT (N.succ n) = N.succ n * NFACT n.
+Lemma factN_of_natS n : factN_of_nat (N.succ n) = N.succ n * factN_of_nat n.
 Proof.
-  intro n.
-  unfold NFACT.
+  unfold factN_of_nat.
   rewrite Nnat.N2Nat.inj_succ.
   simpl.
   lia.
 Qed.
 
-Lemma FACT_def : NFACT = FACT.
+Lemma FACT_def : factN_of_nat = @ε ((prod N (prod N (prod N N))) -> N -> N) (fun FACT' : (prod N (prod N (prod N N))) -> N -> N => forall _2944 : prod N (prod N (prod N N)), ((FACT' _2944 (NUMERAL 0%N)) = (NUMERAL (BIT1 0%N))) /\ (forall n : N, (FACT' _2944 (N.succ n)) = (N.mul (N.succ n) (FACT' _2944 n)))) (@pair N (prod N (prod N N)) (NUMERAL (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0%N)))))))) (@pair N (prod N N) (NUMERAL (BIT1 (BIT0 (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 0%N)))))))) (@pair N N (NUMERAL (BIT1 (BIT1 (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 0%N)))))))) (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0%N))))))))))).
 Proof.
-  unfold FACT, NUMERAL.
-  cbn.
-  align_ε.
+  unfold NUMERAL. cbn. align_ε.
   - split.
-    + exact NFACT0.
-    + exact NFACTS.
+    + exact factN_of_nat0.
+    + exact factN_of_natS.
   - intros FACT' [h0 hS].
     apply fun_ext.
     apply N.peano_ind.
     + rewrite h0.
-      exact NFACT0.
+      exact factN_of_nat0.
     + intros n IH.
       rewrite hS, <- IH.
-      exact (NFACTS n).
+      exact (factN_of_natS n).
 Qed.
 
 Lemma Nadd_sub a b : a + b - a = b. Proof. lia. Qed.
@@ -1354,14 +1330,10 @@ Proof.
     + trivial. 
     + exact (absurd _).
 Qed.
-    
-Definition EVEN : N -> Prop := @ε ((prod N (prod N (prod N N))) -> N -> Prop) (fun EVEN' : (prod N (prod N (prod N N))) -> N -> Prop => forall _2603 : prod N (prod N (prod N N)), ((EVEN' _2603 (NUMERAL 0%N)) = True) /\ (forall n : N, (EVEN' _2603 (N.succ n)) = (~ (EVEN' _2603 n)))) (@pair N (prod N (prod N N)) (NUMERAL (BIT1 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0%N)))))))) (@pair N (prod N N) (NUMERAL (BIT0 (BIT1 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0%N)))))))) (@pair N N (NUMERAL (BIT1 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0%N)))))))) (NUMERAL (BIT0 (BIT1 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0%N))))))))))).
 
-Lemma EVEN_def : N.Even = EVEN.
+Lemma EVEN_def : N.Even = @ε ((prod N (prod N (prod N N))) -> N -> Prop) (fun EVEN' : (prod N (prod N (prod N N))) -> N -> Prop => forall _2603 : prod N (prod N (prod N N)), ((EVEN' _2603 (NUMERAL 0%N)) = True) /\ (forall n : N, (EVEN' _2603 (N.succ n)) = (~ (EVEN' _2603 n)))) (@pair N (prod N (prod N N)) (NUMERAL (BIT1 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0%N)))))))) (@pair N (prod N N) (NUMERAL (BIT0 (BIT1 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0%N)))))))) (@pair N N (NUMERAL (BIT1 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0%N)))))))) (NUMERAL (BIT0 (BIT1 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0%N))))))))))).
 Proof.
-  unfold EVEN, NUMERAL.
-  cbn.
-  align_ε.
+  unfold NUMERAL. cbn. align_ε.
   - split.
     + exact (NEven0).
     + exact (NEvenS).
@@ -1376,13 +1348,9 @@ Proof.
       reflexivity.
 Qed.
 
-Definition ODD : N -> Prop := @ε ((prod N (prod N N)) -> N -> Prop) (fun ODD' : (prod N (prod N N)) -> N -> Prop => forall _2607 : prod N (prod N N), ((ODD' _2607 (NUMERAL 0%N)) = False) /\ (forall n : N, (ODD' _2607 (N.succ n)) = (~ (ODD' _2607 n)))) (@pair N (prod N N) (NUMERAL (BIT1 (BIT1 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0%N)))))))) (@pair N N (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0%N)))))))) (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0%N)))))))))).
-
-Lemma ODD_def: N.Odd = ODD.
+Lemma ODD_def: N.Odd = @ε ((prod N (prod N N)) -> N -> Prop) (fun ODD' : (prod N (prod N N)) -> N -> Prop => forall _2607 : prod N (prod N N), ((ODD' _2607 (NUMERAL 0%N)) = False) /\ (forall n : N, (ODD' _2607 (N.succ n)) = (~ (ODD' _2607 n)))) (@pair N (prod N N) (NUMERAL (BIT1 (BIT1 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0%N)))))))) (@pair N N (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0%N)))))))) (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0%N)))))))))).
 Proof.
-  unfold ODD, NUMERAL.
-  cbn.
-  align_ε.
+  unfold NUMERAL. cbn. align_ε.
   - split.
     + exact (NOdd0).
     + exact (NOddS).
@@ -1628,14 +1596,13 @@ Proof.
 Qed.
 
 (****************************************************************************)
-(* Alignment of well-foundedness. HOL Light: non-empty subsets has minimal, Coq: has induction *)
+(* Alignment of well-foundedness.
+HOL Light: non-empty subsets has minimal, Coq: has induction *)
 (****************************************************************************)
 
 Require Import Coq.Init.Wf.
 
-Definition WF {A : Type'} : (A -> A -> Prop) -> Prop := fun _6923 : A -> A -> Prop => forall P : A -> Prop, (exists x : A, P x) -> exists x : A, (P x) /\ (forall y : A, (_6923 y x) -> ~ (P y)).
-
-Lemma WF_def {A : Type'} : (@well_founded A) = (@WF A).
+Lemma WF_def {A : Type'} : (@well_founded A) = (fun _6923 : A -> A -> Prop => forall P : A -> Prop, (exists x : A, P x) -> exists x : A, (P x) /\ (forall y : A, (_6923 y x) -> ~ (P y))).
 Proof.
   ext R.
   apply prop_ext; intro H.

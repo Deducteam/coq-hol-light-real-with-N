@@ -1,4 +1,4 @@
-Require Import HOLLight_Real_With_N.mappings Coq.NArith.BinNat.
+Require Import Coq.NArith.BinNat HOLLight_Real_With_N.mappings.
 Require Import HOLLight_Real_With_N.theory_hol.
 Require Import HOLLight_Real_With_N.terms.
 Axiom thm_T_DEF : True = ((fun p : Prop => p) = (fun p : Prop => p)).
@@ -133,7 +133,7 @@ Axiom thm_ETA_ONE : forall {A : Type'}, forall f : unit -> A, (fun x : unit => f
 Axiom thm_LET_DEF : forall {A B : Type'}, forall f : A -> B, forall x : A, (@LET A B f x) = (f x).
 Axiom thm_LET_END_DEF : forall {A : Type'}, forall t : A, (@LET_END A t) = t.
 Axiom thm_GABS_DEF : forall {A : Type'}, forall P : A -> Prop, (@GABS A P) = (@ε A P).
-Axiom thm_GEQ_DEF : forall {A : Type'}, forall a : A, forall b : A, (@GEQ A a b) = (a = b).
+Axiom thm_GEQ_DEF : forall {A : Type'}, forall a : A, forall b : A, (@eq A a b) = (a = b).
 Axiom thm__SEQPATTERN : forall {A B : Type'}, (@_SEQPATTERN A B) = (fun r : A -> B -> Prop => fun s : A -> B -> Prop => fun x : A => @COND (B -> Prop) (exists y : B, r x y) (r x) (s x)).
 Axiom thm__UNGUARDED_PATTERN : _UNGUARDED_PATTERN = (fun p : Prop => fun r : Prop => p /\ r).
 Axiom thm__GUARDED_PATTERN : _GUARDED_PATTERN = (fun p : Prop => fun g : Prop => fun r : Prop => p /\ (g /\ r)).
@@ -157,15 +157,15 @@ Axiom thm_UNCURRY_DEF : forall {A B C : Type'}, forall f : A -> B -> C, forall x
 Axiom thm_PASSOC_DEF : forall {A B C D : Type'}, forall f : (prod (prod A B) C) -> D, forall x : A, forall y : B, forall z : C, (@PASSOC A B C D f (@pair A (prod B C) x (@pair B C y z))) = (f (@pair (prod A B) C (@pair A B x y) z)).
 Axiom thm_FORALL_PAIR_THM : forall {A B : Type'}, forall P : (prod A B) -> Prop, (forall p : prod A B, P p) = (forall p1 : A, forall p2 : B, P (@pair A B p1 p2)).
 Axiom thm_EXISTS_PAIR_THM : forall {A B : Type'}, forall P : (prod A B) -> Prop, (exists p : prod A B, P p) = (exists p1 : A, exists p2 : B, P (@pair A B p1 p2)).
-Axiom thm_LAMBDA_PAIR_THM : forall {A B C : Type'}, forall t : (prod A B) -> C, (fun p : prod A B => t p) = (@GABS ((prod A B) -> C) (fun f : (prod A B) -> C => forall x : A, forall y : B, @GEQ C (f (@pair A B x y)) (t (@pair A B x y)))).
-Axiom thm_LAMBDA_PAIR : forall {A B C : Type'}, forall f : A -> B -> C, (@GABS ((prod A B) -> C) (fun f' : (prod A B) -> C => forall x : A, forall y : B, @GEQ C (f' (@pair A B x y)) (f x y))) = (fun p : prod A B => f (@fst A B p) (@snd A B p)).
-Axiom thm_LAMBDA_TRIPLE_THM : forall {A B C D : Type'}, forall f : (prod A (prod B C)) -> D, (fun t : prod A (prod B C) => f t) = (@GABS ((prod A (prod B C)) -> D) (fun f' : (prod A (prod B C)) -> D => forall x : A, forall y : B, forall z : C, @GEQ D (f' (@pair A (prod B C) x (@pair B C y z))) (f (@pair A (prod B C) x (@pair B C y z))))).
-Axiom thm_LAMBDA_TRIPLE : forall {A B C D : Type'}, forall f : A -> B -> C -> D, (@GABS ((prod A (prod B C)) -> D) (fun f' : (prod A (prod B C)) -> D => forall x : A, forall y : B, forall z : C, @GEQ D (f' (@pair A (prod B C) x (@pair B C y z))) (f x y z))) = (fun t : prod A (prod B C) => f (@fst A (prod B C) t) (@fst B C (@snd A (prod B C) t)) (@snd B C (@snd A (prod B C) t))).
-Axiom thm_PAIRED_ETA_THM : forall {A B C D E : Type'}, (forall f : (prod A B) -> C, (@GABS ((prod A B) -> C) (fun f' : (prod A B) -> C => forall x : A, forall y : B, @GEQ C (f' (@pair A B x y)) (f (@pair A B x y)))) = f) /\ ((forall f : (prod A (prod B C)) -> D, (@GABS ((prod A (prod B C)) -> D) (fun f' : (prod A (prod B C)) -> D => forall x : A, forall y : B, forall z : C, @GEQ D (f' (@pair A (prod B C) x (@pair B C y z))) (f (@pair A (prod B C) x (@pair B C y z))))) = f) /\ (forall f : (prod A (prod B (prod C D))) -> E, (@GABS ((prod A (prod B (prod C D))) -> E) (fun f' : (prod A (prod B (prod C D))) -> E => forall w : A, forall x : B, forall y : C, forall z : D, @GEQ E (f' (@pair A (prod B (prod C D)) w (@pair B (prod C D) x (@pair C D y z)))) (f (@pair A (prod B (prod C D)) w (@pair B (prod C D) x (@pair C D y z)))))) = f)).
+Axiom thm_LAMBDA_PAIR_THM : forall {A B C : Type'}, forall t : (prod A B) -> C, (fun p : prod A B => t p) = (@GABS ((prod A B) -> C) (fun f : (prod A B) -> C => forall x : A, forall y : B, @eq C (f (@pair A B x y)) (t (@pair A B x y)))).
+Axiom thm_LAMBDA_PAIR : forall {A B C : Type'}, forall f : A -> B -> C, (@GABS ((prod A B) -> C) (fun f' : (prod A B) -> C => forall x : A, forall y : B, @eq C (f' (@pair A B x y)) (f x y))) = (fun p : prod A B => f (@fst A B p) (@snd A B p)).
+Axiom thm_LAMBDA_TRIPLE_THM : forall {A B C D : Type'}, forall f : (prod A (prod B C)) -> D, (fun t : prod A (prod B C) => f t) = (@GABS ((prod A (prod B C)) -> D) (fun f' : (prod A (prod B C)) -> D => forall x : A, forall y : B, forall z : C, @eq D (f' (@pair A (prod B C) x (@pair B C y z))) (f (@pair A (prod B C) x (@pair B C y z))))).
+Axiom thm_LAMBDA_TRIPLE : forall {A B C D : Type'}, forall f : A -> B -> C -> D, (@GABS ((prod A (prod B C)) -> D) (fun f' : (prod A (prod B C)) -> D => forall x : A, forall y : B, forall z : C, @eq D (f' (@pair A (prod B C) x (@pair B C y z))) (f x y z))) = (fun t : prod A (prod B C) => f (@fst A (prod B C) t) (@fst B C (@snd A (prod B C) t)) (@snd B C (@snd A (prod B C) t))).
+Axiom thm_PAIRED_ETA_THM : forall {A B C D E : Type'}, (forall f : (prod A B) -> C, (@GABS ((prod A B) -> C) (fun f' : (prod A B) -> C => forall x : A, forall y : B, @eq C (f' (@pair A B x y)) (f (@pair A B x y)))) = f) /\ ((forall f : (prod A (prod B C)) -> D, (@GABS ((prod A (prod B C)) -> D) (fun f' : (prod A (prod B C)) -> D => forall x : A, forall y : B, forall z : C, @eq D (f' (@pair A (prod B C) x (@pair B C y z))) (f (@pair A (prod B C) x (@pair B C y z))))) = f) /\ (forall f : (prod A (prod B (prod C D))) -> E, (@GABS ((prod A (prod B (prod C D))) -> E) (fun f' : (prod A (prod B (prod C D))) -> E => forall w : A, forall x : B, forall y : C, forall z : D, @eq E (f' (@pair A (prod B (prod C D)) w (@pair B (prod C D) x (@pair C D y z)))) (f (@pair A (prod B (prod C D)) w (@pair B (prod C D) x (@pair C D y z)))))) = f)).
 Axiom thm_FORALL_UNCURRY : forall {A B C : Type'}, forall P : (A -> B -> C) -> Prop, (forall f : A -> B -> C, P f) = (forall f : (prod A B) -> C, P (fun a : A => fun b : B => f (@pair A B a b))).
 Axiom thm_EXISTS_UNCURRY : forall {A B C : Type'}, forall P : (A -> B -> C) -> Prop, (exists f : A -> B -> C, P f) = (exists f : (prod A B) -> C, P (fun a : A => fun b : B => f (@pair A B a b))).
-Axiom thm_EXISTS_CURRY : forall {A B C : Type'}, forall P : ((prod A B) -> C) -> Prop, (exists f : (prod A B) -> C, P f) = (exists f : A -> B -> C, P (@GABS ((prod A B) -> C) (fun f' : (prod A B) -> C => forall a : A, forall b : B, @GEQ C (f' (@pair A B a b)) (f a b)))).
-Axiom thm_FORALL_CURRY : forall {A B C : Type'}, forall P : ((prod A B) -> C) -> Prop, (forall f : (prod A B) -> C, P f) = (forall f : A -> B -> C, P (@GABS ((prod A B) -> C) (fun f' : (prod A B) -> C => forall a : A, forall b : B, @GEQ C (f' (@pair A B a b)) (f a b)))).
+Axiom thm_EXISTS_CURRY : forall {A B C : Type'}, forall P : ((prod A B) -> C) -> Prop, (exists f : (prod A B) -> C, P f) = (exists f : A -> B -> C, P (@GABS ((prod A B) -> C) (fun f' : (prod A B) -> C => forall a : A, forall b : B, @eq C (f' (@pair A B a b)) (f a b)))).
+Axiom thm_FORALL_CURRY : forall {A B C : Type'}, forall P : ((prod A B) -> C) -> Prop, (forall f : (prod A B) -> C, P f) = (forall f : A -> B -> C, P (@GABS ((prod A B) -> C) (fun f' : (prod A B) -> C => forall a : A, forall b : B, @eq C (f' (@pair A B a b)) (f a b)))).
 Axiom thm_FORALL_UNPAIR_THM : forall {A B : Type'}, forall P : A -> B -> Prop, (forall x : A, forall y : B, P x y) = (forall z : prod A B, P (@fst A B z) (@snd A B z)).
 Axiom thm_EXISTS_UNPAIR_THM : forall {A B : Type'}, forall P : A -> B -> Prop, (exists x : A, exists y : B, P x y) = (exists z : prod A B, P (@fst A B z) (@snd A B z)).
 Axiom thm_FORALL_PAIR_FUN_THM : forall {A B C : Type'}, forall P : (A -> prod B C) -> Prop, (forall f : A -> prod B C, P f) = (forall g : A -> B, forall h : A -> C, P (fun a : A => @pair B C (g a) (h a))).
@@ -173,12 +173,12 @@ Axiom thm_EXISTS_PAIR_FUN_THM : forall {A B C : Type'}, forall P : (A -> prod B 
 Axiom thm_FORALL_UNPAIR_FUN_THM : forall {A B C : Type'}, forall P : (A -> B) -> (A -> C) -> Prop, (forall f : A -> B, forall g : A -> C, P f g) = (forall h : A -> prod B C, P (@o A (prod B C) B (@fst B C) h) (@o A (prod B C) C (@snd B C) h)).
 Axiom thm_EXISTS_UNPAIR_FUN_THM : forall {A B C : Type'}, forall P : (A -> B) -> (A -> C) -> Prop, (exists f : A -> B, exists g : A -> C, P f g) = (exists h : A -> prod B C, P (@o A (prod B C) B (@fst B C) h) (@o A (prod B C) C (@snd B C) h)).
 Axiom thm_EXISTS_SWAP_FUN_THM : forall {A B C : Type'}, forall P : (A -> B -> C) -> Prop, (exists f : A -> B -> C, P f) = (exists f : B -> A -> C, P (fun a : A => fun b : B => f b a)).
-Axiom thm_FORALL_PAIRED_THM : forall {A B : Type'}, forall P : A -> B -> Prop, (all (@GABS ((prod A B) -> Prop) (fun f : (prod A B) -> Prop => forall x : A, forall y : B, @GEQ Prop (f (@pair A B x y)) (P x y)))) = (forall x : A, forall y : B, P x y).
-Axiom thm_EXISTS_PAIRED_THM : forall {A B : Type'}, forall P : A -> B -> Prop, (ex (@GABS ((prod A B) -> Prop) (fun f : (prod A B) -> Prop => forall x : A, forall y : B, @GEQ Prop (f (@pair A B x y)) (P x y)))) = (exists x : A, exists y : B, P x y).
-Axiom thm_FORALL_TRIPLED_THM : forall {A B C : Type'}, forall P : A -> B -> C -> Prop, (all (@GABS ((prod A (prod B C)) -> Prop) (fun f : (prod A (prod B C)) -> Prop => forall x : A, forall y : B, forall z : C, @GEQ Prop (f (@pair A (prod B C) x (@pair B C y z))) (P x y z)))) = (forall x : A, forall y : B, forall z : C, P x y z).
-Axiom thm_EXISTS_TRIPLED_THM : forall {A B C : Type'}, forall P : A -> B -> C -> Prop, (ex (@GABS ((prod A (prod B C)) -> Prop) (fun f : (prod A (prod B C)) -> Prop => forall x : A, forall y : B, forall z : C, @GEQ Prop (f (@pair A (prod B C) x (@pair B C y z))) (P x y z)))) = (exists x : A, exists y : B, exists z : C, P x y z).
-Axiom thm_CHOICE_UNPAIR_THM : forall {A B : Type'}, forall P : A -> B -> Prop, (@ε (prod A B) (@GABS ((prod A B) -> Prop) (fun f : (prod A B) -> Prop => forall x : A, forall y : B, @GEQ Prop (f (@pair A B x y)) (P x y)))) = (@ε (prod A B) (fun p : prod A B => P (@fst A B p) (@snd A B p))).
-Axiom thm_CHOICE_PAIRED_THM : forall {A B : Type'}, forall P : A -> B -> Prop, forall Q : (prod A B) -> Prop, ((exists x : A, exists y : B, P x y) /\ (forall x : A, forall y : B, (P x y) -> Q (@pair A B x y))) -> Q (@ε (prod A B) (@GABS ((prod A B) -> Prop) (fun f : (prod A B) -> Prop => forall x : A, forall y : B, @GEQ Prop (f (@pair A B x y)) (P x y)))).
+Axiom thm_FORALL_PAIRED_THM : forall {A B : Type'}, forall P : A -> B -> Prop, (all (@GABS ((prod A B) -> Prop) (fun f : (prod A B) -> Prop => forall x : A, forall y : B, @eq Prop (f (@pair A B x y)) (P x y)))) = (forall x : A, forall y : B, P x y).
+Axiom thm_EXISTS_PAIRED_THM : forall {A B : Type'}, forall P : A -> B -> Prop, (ex (@GABS ((prod A B) -> Prop) (fun f : (prod A B) -> Prop => forall x : A, forall y : B, @eq Prop (f (@pair A B x y)) (P x y)))) = (exists x : A, exists y : B, P x y).
+Axiom thm_FORALL_TRIPLED_THM : forall {A B C : Type'}, forall P : A -> B -> C -> Prop, (all (@GABS ((prod A (prod B C)) -> Prop) (fun f : (prod A (prod B C)) -> Prop => forall x : A, forall y : B, forall z : C, @eq Prop (f (@pair A (prod B C) x (@pair B C y z))) (P x y z)))) = (forall x : A, forall y : B, forall z : C, P x y z).
+Axiom thm_EXISTS_TRIPLED_THM : forall {A B C : Type'}, forall P : A -> B -> C -> Prop, (ex (@GABS ((prod A (prod B C)) -> Prop) (fun f : (prod A (prod B C)) -> Prop => forall x : A, forall y : B, forall z : C, @eq Prop (f (@pair A (prod B C) x (@pair B C y z))) (P x y z)))) = (exists x : A, exists y : B, exists z : C, P x y z).
+Axiom thm_CHOICE_UNPAIR_THM : forall {A B : Type'}, forall P : A -> B -> Prop, (@ε (prod A B) (@GABS ((prod A B) -> Prop) (fun f : (prod A B) -> Prop => forall x : A, forall y : B, @eq Prop (f (@pair A B x y)) (P x y)))) = (@ε (prod A B) (fun p : prod A B => P (@fst A B p) (@snd A B p))).
+Axiom thm_CHOICE_PAIRED_THM : forall {A B : Type'}, forall P : A -> B -> Prop, forall Q : (prod A B) -> Prop, ((exists x : A, exists y : B, P x y) /\ (forall x : A, forall y : B, (P x y) -> Q (@pair A B x y))) -> Q (@ε (prod A B) (@GABS ((prod A B) -> Prop) (fun f : (prod A B) -> Prop => forall x : A, forall y : B, @eq Prop (f (@pair A B x y)) (P x y)))).
 Axiom thm_ONE_ONE : forall {A B : Type'}, forall f : A -> B, (@ONE_ONE A B f) = (forall x1 : A, forall x2 : A, ((f x1) = (f x2)) -> x1 = x2).
 Axiom thm_ONTO : forall {A B : Type'}, forall f : A -> B, (@ONTO A B f) = (forall y : B, exists x : A, y = (f x)).
 Axiom thm_INFINITY_AX : exists f : ind -> ind, (@ONE_ONE ind ind f) /\ (~ (@ONTO ind ind f)).
@@ -305,24 +305,24 @@ Axiom thm_num_WOP : forall P : N -> Prop, (exists n : N, P n) = (exists n : N, (
 Axiom thm_num_MAX : forall P : N -> Prop, ((exists x : N, P x) /\ (exists M : N, forall x : N, (P x) -> N.le x M)) = (exists m : N, (P m) /\ (forall x : N, (P x) -> N.le x m)).
 Axiom thm_LE_INDUCT : forall P : N -> N -> Prop, ((forall m : N, P m m) /\ (forall m : N, forall n : N, ((N.le m n) /\ (P m n)) -> P m (N.succ n))) -> forall m : N, forall n : N, (N.le m n) -> P m n.
 Axiom thm_num_INDUCTION_DOWN : forall P : N -> Prop, forall m : N, ((forall n : N, (N.le m n) -> P n) /\ (forall n : N, ((N.lt n m) /\ (P (N.add n (NUMERAL (BIT1 0%N))))) -> P n)) -> forall n : N, P n.
-Axiom thm_EVEN : ((EVEN (NUMERAL 0%N)) = True) /\ (forall n : N, (EVEN (N.succ n)) = (~ (EVEN n))).
-Axiom thm_ODD : ((ODD (NUMERAL 0%N)) = False) /\ (forall n : N, (ODD (N.succ n)) = (~ (ODD n))).
-Axiom thm_NOT_EVEN : forall n : N, (~ (EVEN n)) = (ODD n).
-Axiom thm_NOT_ODD : forall n : N, (~ (ODD n)) = (EVEN n).
-Axiom thm_EVEN_OR_ODD : forall n : N, (EVEN n) \/ (ODD n).
-Axiom thm_EVEN_AND_ODD : forall n : N, ~ ((EVEN n) /\ (ODD n)).
-Axiom thm_EVEN_ADD : forall m : N, forall n : N, (EVEN (N.add m n)) = ((EVEN m) = (EVEN n)).
-Axiom thm_EVEN_MULT : forall m : N, forall n : N, (EVEN (N.mul m n)) = ((EVEN m) \/ (EVEN n)).
-Axiom thm_EVEN_EXP : forall m : N, forall n : N, (EVEN (N.pow m n)) = ((EVEN m) /\ (~ (n = (NUMERAL 0%N)))).
-Axiom thm_ODD_ADD : forall m : N, forall n : N, (ODD (N.add m n)) = (~ ((ODD m) = (ODD n))).
-Axiom thm_ODD_MULT : forall m : N, forall n : N, (ODD (N.mul m n)) = ((ODD m) /\ (ODD n)).
-Axiom thm_ODD_EXP : forall m : N, forall n : N, (ODD (N.pow m n)) = ((ODD m) \/ (n = (NUMERAL 0%N))).
-Axiom thm_EVEN_DOUBLE : forall n : N, EVEN (N.mul (NUMERAL (BIT0 (BIT1 0%N))) n).
-Axiom thm_ODD_DOUBLE : forall n : N, ODD (N.succ (N.mul (NUMERAL (BIT0 (BIT1 0%N))) n)).
-Axiom thm_EVEN_EXISTS_LEMMA : forall n : N, ((EVEN n) -> exists m : N, n = (N.mul (NUMERAL (BIT0 (BIT1 0%N))) m)) /\ ((~ (EVEN n)) -> exists m : N, n = (N.succ (N.mul (NUMERAL (BIT0 (BIT1 0%N))) m))).
-Axiom thm_EVEN_EXISTS : forall n : N, (EVEN n) = (exists m : N, n = (N.mul (NUMERAL (BIT0 (BIT1 0%N))) m)).
-Axiom thm_ODD_EXISTS : forall n : N, (ODD n) = (exists m : N, n = (N.succ (N.mul (NUMERAL (BIT0 (BIT1 0%N))) m))).
-Axiom thm_EVEN_ODD_DECOMPOSITION : forall n : N, (exists k : N, exists m : N, (ODD m) /\ (n = (N.mul (N.pow (NUMERAL (BIT0 (BIT1 0%N))) k) m))) = (~ (n = (NUMERAL 0%N))).
+Axiom thm_EVEN : ((N.Even (NUMERAL 0%N)) = True) /\ (forall n : N, (N.Even (N.succ n)) = (~ (N.Even n))).
+Axiom thm_ODD : ((N.Odd (NUMERAL 0%N)) = False) /\ (forall n : N, (N.Odd (N.succ n)) = (~ (N.Odd n))).
+Axiom thm_NOT_EVEN : forall n : N, (~ (N.Even n)) = (N.Odd n).
+Axiom thm_NOT_ODD : forall n : N, (~ (N.Odd n)) = (N.Even n).
+Axiom thm_EVEN_OR_ODD : forall n : N, (N.Even n) \/ (N.Odd n).
+Axiom thm_EVEN_AND_ODD : forall n : N, ~ ((N.Even n) /\ (N.Odd n)).
+Axiom thm_EVEN_ADD : forall m : N, forall n : N, (N.Even (N.add m n)) = ((N.Even m) = (N.Even n)).
+Axiom thm_EVEN_MULT : forall m : N, forall n : N, (N.Even (N.mul m n)) = ((N.Even m) \/ (N.Even n)).
+Axiom thm_EVEN_EXP : forall m : N, forall n : N, (N.Even (N.pow m n)) = ((N.Even m) /\ (~ (n = (NUMERAL 0%N)))).
+Axiom thm_ODD_ADD : forall m : N, forall n : N, (N.Odd (N.add m n)) = (~ ((N.Odd m) = (N.Odd n))).
+Axiom thm_ODD_MULT : forall m : N, forall n : N, (N.Odd (N.mul m n)) = ((N.Odd m) /\ (N.Odd n)).
+Axiom thm_ODD_EXP : forall m : N, forall n : N, (N.Odd (N.pow m n)) = ((N.Odd m) \/ (n = (NUMERAL 0%N))).
+Axiom thm_EVEN_DOUBLE : forall n : N, N.Even (N.mul (NUMERAL (BIT0 (BIT1 0%N))) n).
+Axiom thm_ODD_DOUBLE : forall n : N, N.Odd (N.succ (N.mul (NUMERAL (BIT0 (BIT1 0%N))) n)).
+Axiom thm_EVEN_EXISTS_LEMMA : forall n : N, ((N.Even n) -> exists m : N, n = (N.mul (NUMERAL (BIT0 (BIT1 0%N))) m)) /\ ((~ (N.Even n)) -> exists m : N, n = (N.succ (N.mul (NUMERAL (BIT0 (BIT1 0%N))) m))).
+Axiom thm_EVEN_EXISTS : forall n : N, (N.Even n) = (exists m : N, n = (N.mul (NUMERAL (BIT0 (BIT1 0%N))) m)).
+Axiom thm_ODD_EXISTS : forall n : N, (N.Odd n) = (exists m : N, n = (N.succ (N.mul (NUMERAL (BIT0 (BIT1 0%N))) m))).
+Axiom thm_EVEN_ODD_DECOMPOSITION : forall n : N, (exists k : N, exists m : N, (N.Odd m) /\ (n = (N.mul (N.pow (NUMERAL (BIT0 (BIT1 0%N))) k) m))) = (~ (n = (NUMERAL 0%N))).
 Axiom thm_SUB : (forall m : N, (N.sub m (NUMERAL 0%N)) = m) /\ (forall m : N, forall n : N, (N.sub m (N.succ n)) = (N.pred (N.sub m n))).
 Axiom thm_SUB_0 : forall m : N, ((N.sub (NUMERAL 0%N) m) = (NUMERAL 0%N)) /\ ((N.sub m (NUMERAL 0%N)) = m).
 Axiom thm_SUB_PRESUC : forall m : N, forall n : N, (N.pred (N.sub (N.succ m) n)) = (N.sub m n).
@@ -339,13 +339,13 @@ Axiom thm_SUB_ADD_RCANCEL : forall m : N, forall n : N, forall p : N, (N.sub (N.
 Axiom thm_LEFT_SUB_DISTRIB : forall m : N, forall n : N, forall p : N, (N.mul m (N.sub n p)) = (N.sub (N.mul m n) (N.mul m p)).
 Axiom thm_RIGHT_SUB_DISTRIB : forall m : N, forall n : N, forall p : N, (N.mul (N.sub m n) p) = (N.sub (N.mul m p) (N.mul n p)).
 Axiom thm_SUC_SUB1 : forall n : N, (N.sub (N.succ n) (NUMERAL (BIT1 0%N))) = n.
-Axiom thm_EVEN_SUB : forall m : N, forall n : N, (EVEN (N.sub m n)) = ((N.le m n) \/ ((EVEN m) = (EVEN n))).
-Axiom thm_ODD_SUB : forall m : N, forall n : N, (ODD (N.sub m n)) = ((N.lt n m) /\ (~ ((ODD m) = (ODD n)))).
-Axiom thm_FACT : ((FACT (NUMERAL 0%N)) = (NUMERAL (BIT1 0%N))) /\ (forall n : N, (FACT (N.succ n)) = (N.mul (N.succ n) (FACT n))).
-Axiom thm_FACT_LT : forall n : N, N.lt (NUMERAL 0%N) (FACT n).
-Axiom thm_FACT_LE : forall n : N, N.le (NUMERAL (BIT1 0%N)) (FACT n).
-Axiom thm_FACT_NZ : forall n : N, ~ ((FACT n) = (NUMERAL 0%N)).
-Axiom thm_FACT_MONO : forall m : N, forall n : N, (N.le m n) -> N.le (FACT m) (FACT n).
+Axiom thm_EVEN_SUB : forall m : N, forall n : N, (N.Even (N.sub m n)) = ((N.le m n) \/ ((N.Even m) = (N.Even n))).
+Axiom thm_ODD_SUB : forall m : N, forall n : N, (N.Odd (N.sub m n)) = ((N.lt n m) /\ (~ ((N.Odd m) = (N.Odd n)))).
+Axiom thm_FACT : ((factN_of_nat (NUMERAL 0%N)) = (NUMERAL (BIT1 0%N))) /\ (forall n : N, (factN_of_nat (N.succ n)) = (N.mul (N.succ n) (factN_of_nat n))).
+Axiom thm_FACT_LT : forall n : N, N.lt (NUMERAL 0%N) (factN_of_nat n).
+Axiom thm_FACT_LE : forall n : N, N.le (NUMERAL (BIT1 0%N)) (factN_of_nat n).
+Axiom thm_FACT_NZ : forall n : N, ~ ((factN_of_nat n) = (NUMERAL 0%N)).
+Axiom thm_FACT_MONO : forall m : N, forall n : N, (N.le m n) -> N.le (factN_of_nat m) (factN_of_nat n).
 Axiom thm_EXP_LT_0 : forall n : N, forall x : N, (N.lt (NUMERAL 0%N) (N.pow x n)) = ((~ (x = (NUMERAL 0%N))) \/ (n = (NUMERAL 0%N))).
 Axiom thm_LT_EXP : forall x : N, forall m : N, forall n : N, (N.lt (N.pow x m) (N.pow x n)) = (((N.le (NUMERAL (BIT0 (BIT1 0%N))) x) /\ (N.lt m n)) \/ ((x = (NUMERAL 0%N)) /\ ((~ (m = (NUMERAL 0%N))) /\ (n = (NUMERAL 0%N))))).
 Axiom thm_LE_EXP : forall x : N, forall m : N, forall n : N, (N.le (N.pow x m) (N.pow x n)) = (@COND Prop (x = (NUMERAL 0%N)) ((m = (NUMERAL 0%N)) -> n = (NUMERAL 0%N)) ((x = (NUMERAL (BIT1 0%N))) \/ (N.le m n))).
@@ -386,7 +386,7 @@ Axiom thm_DIV_LT : forall m : N, forall n : N, (N.lt m n) -> (N.div m n) = (NUME
 Axiom thm_MOD_MOD : forall m : N, forall n : N, forall p : N, (N.modulo (N.modulo m (N.mul n p)) n) = (N.modulo m n).
 Axiom thm_MOD_MOD_REFL : forall m : N, forall n : N, (N.modulo (N.modulo m n) n) = (N.modulo m n).
 Axiom thm_MOD_MOD_LE : forall m : N, forall n : N, forall p : N, ((~ (n = (NUMERAL 0%N))) /\ (N.le n p)) -> (N.modulo (N.modulo m n) p) = (N.modulo m n).
-Axiom thm_MOD_EVEN_2 : forall m : N, forall n : N, (EVEN n) -> (N.modulo (N.modulo m n) (NUMERAL (BIT0 (BIT1 0%N)))) = (N.modulo m (NUMERAL (BIT0 (BIT1 0%N)))).
+Axiom thm_MOD_EVEN_2 : forall m : N, forall n : N, (N.Even n) -> (N.modulo (N.modulo m n) (NUMERAL (BIT0 (BIT1 0%N)))) = (N.modulo m (NUMERAL (BIT0 (BIT1 0%N)))).
 Axiom thm_DIV_MULT2 : forall m : N, forall n : N, forall p : N, (~ (m = (NUMERAL 0%N))) -> (N.div (N.mul m n) (N.mul m p)) = (N.div n p).
 Axiom thm_MOD_MULT2 : forall m : N, forall n : N, forall p : N, (N.modulo (N.mul m n) (N.mul m p)) = (N.mul m (N.modulo n p)).
 Axiom thm_MOD_EXISTS : forall m : N, forall n : N, (exists q : N, m = (N.mul n q)) = (@COND Prop (n = (NUMERAL 0%N)) (m = (NUMERAL 0%N)) ((N.modulo m n) = (NUMERAL 0%N))).
@@ -402,13 +402,13 @@ Axiom thm_MOD_DIV_EQ_0 : forall m : N, forall n : N, (~ (n = (NUMERAL 0%N))) -> 
 Axiom thm_MOD_EQ_0 : forall m : N, forall n : N, ((N.modulo m n) = (NUMERAL 0%N)) = (exists q : N, m = (N.mul q n)).
 Axiom thm_DIV_EQ_SELF : forall m : N, forall n : N, ((N.div m n) = m) = ((m = (NUMERAL 0%N)) \/ (n = (NUMERAL (BIT1 0%N)))).
 Axiom thm_MOD_REFL : forall n : N, (N.modulo n n) = (NUMERAL 0%N).
-Axiom thm_EVEN_MOD : forall n : N, (EVEN n) = ((N.modulo n (NUMERAL (BIT0 (BIT1 0%N)))) = (NUMERAL 0%N)).
-Axiom thm_ODD_MOD : forall n : N, (ODD n) = ((N.modulo n (NUMERAL (BIT0 (BIT1 0%N)))) = (NUMERAL (BIT1 0%N))).
-Axiom thm_MOD_2_CASES : forall n : N, (N.modulo n (NUMERAL (BIT0 (BIT1 0%N)))) = (@COND N (EVEN n) (NUMERAL 0%N) (NUMERAL (BIT1 0%N))).
-Axiom thm_EVEN_MOD_EVEN : forall m : N, forall n : N, (EVEN n) -> (EVEN (N.modulo m n)) = (EVEN m).
-Axiom thm_ODD_MOD_EVEN : forall m : N, forall n : N, (EVEN n) -> (ODD (N.modulo m n)) = (ODD m).
+Axiom thm_EVEN_MOD : forall n : N, (N.Even n) = ((N.modulo n (NUMERAL (BIT0 (BIT1 0%N)))) = (NUMERAL 0%N)).
+Axiom thm_ODD_MOD : forall n : N, (N.Odd n) = ((N.modulo n (NUMERAL (BIT0 (BIT1 0%N)))) = (NUMERAL (BIT1 0%N))).
+Axiom thm_MOD_2_CASES : forall n : N, (N.modulo n (NUMERAL (BIT0 (BIT1 0%N)))) = (@COND N (N.Even n) (NUMERAL 0%N) (NUMERAL (BIT1 0%N))).
+Axiom thm_EVEN_MOD_EVEN : forall m : N, forall n : N, (N.Even n) -> (N.Even (N.modulo m n)) = (N.Even m).
+Axiom thm_ODD_MOD_EVEN : forall m : N, forall n : N, (N.Even n) -> (N.Odd (N.modulo m n)) = (N.Odd m).
 Axiom thm_HALF_DOUBLE : (forall n : N, (N.div (N.mul (NUMERAL (BIT0 (BIT1 0%N))) n) (NUMERAL (BIT0 (BIT1 0%N)))) = n) /\ (forall n : N, (N.div (N.mul n (NUMERAL (BIT0 (BIT1 0%N)))) (NUMERAL (BIT0 (BIT1 0%N)))) = n).
-Axiom thm_DOUBLE_HALF : (forall n : N, (EVEN n) -> (N.mul (NUMERAL (BIT0 (BIT1 0%N))) (N.div n (NUMERAL (BIT0 (BIT1 0%N))))) = n) /\ (forall n : N, (EVEN n) -> (N.mul (N.div n (NUMERAL (BIT0 (BIT1 0%N)))) (NUMERAL (BIT0 (BIT1 0%N)))) = n).
+Axiom thm_DOUBLE_HALF : (forall n : N, (N.Even n) -> (N.mul (NUMERAL (BIT0 (BIT1 0%N))) (N.div n (NUMERAL (BIT0 (BIT1 0%N))))) = n) /\ (forall n : N, (N.Even n) -> (N.mul (N.div n (NUMERAL (BIT0 (BIT1 0%N)))) (NUMERAL (BIT0 (BIT1 0%N)))) = n).
 Axiom thm_MOD_MULT_RMOD : forall m : N, forall n : N, forall p : N, (N.modulo (N.mul m (N.modulo p n)) n) = (N.modulo (N.mul m p) n).
 Axiom thm_MOD_MULT_LMOD : forall m : N, forall n : N, forall p : N, (N.modulo (N.mul (N.modulo m n) p) n) = (N.modulo (N.mul m p) n).
 Axiom thm_MOD_MULT_MOD2 : forall m : N, forall n : N, forall p : N, (N.modulo (N.mul (N.modulo m n) (N.modulo p n)) n) = (N.modulo (N.mul m p) n).
@@ -469,9 +469,9 @@ Axiom thm_WF_REC_EXISTS : forall {A B : Type'} (lt2 : A -> A -> Prop), (@WF A lt
 Axiom thm_WF_SUBSET : forall {A : Type'}, forall lt2 : A -> A -> Prop, forall lt3 : A -> A -> Prop, ((forall x : A, forall y : A, (lt2 x y) -> lt3 x y) /\ (@WF A lt3)) -> @WF A lt2.
 Axiom thm_WF_RESTRICT : forall {A : Type'}, forall lt2 : A -> A -> Prop, forall P : A -> Prop, (@WF A lt2) -> @WF A (fun x : A => fun y : A => (P x) /\ ((P y) /\ (lt2 x y))).
 Axiom thm_WF_MEASURE_GEN : forall {A B : Type'}, forall lt2 : B -> B -> Prop, forall m : A -> B, (@WF B lt2) -> @WF A (fun x : A => fun x' : A => lt2 (m x) (m x')).
-Axiom thm_WF_LEX_DEPENDENT : forall {A B : Type'}, forall R' : A -> A -> Prop, forall S' : A -> B -> B -> Prop, ((@WF A R') /\ (forall a : A, @WF B (S' a))) -> @WF (prod A B) (@GABS ((prod A B) -> (prod A B) -> Prop) (fun f : (prod A B) -> (prod A B) -> Prop => forall r1 : A, forall s1 : B, @GEQ ((prod A B) -> Prop) (f (@pair A B r1 s1)) (@GABS ((prod A B) -> Prop) (fun f' : (prod A B) -> Prop => forall r2 : A, forall s2 : B, @GEQ Prop (f' (@pair A B r2 s2)) ((R' r1 r2) \/ ((r1 = r2) /\ (S' r1 s1 s2))))))).
-Axiom thm_WF_LEX : forall {A B : Type'}, forall R' : A -> A -> Prop, forall S' : B -> B -> Prop, ((@WF A R') /\ (@WF B S')) -> @WF (prod A B) (@GABS ((prod A B) -> (prod A B) -> Prop) (fun f : (prod A B) -> (prod A B) -> Prop => forall r1 : A, forall s1 : B, @GEQ ((prod A B) -> Prop) (f (@pair A B r1 s1)) (@GABS ((prod A B) -> Prop) (fun f' : (prod A B) -> Prop => forall r2 : A, forall s2 : B, @GEQ Prop (f' (@pair A B r2 s2)) ((R' r1 r2) \/ ((r1 = r2) /\ (S' s1 s2))))))).
-Axiom thm_WF_POINTWISE : forall {A B : Type'} (lt2 : A -> A -> Prop) (lt3 : B -> B -> Prop), ((@WF A lt2) /\ (@WF B lt3)) -> @WF (prod A B) (@GABS ((prod A B) -> (prod A B) -> Prop) (fun f : (prod A B) -> (prod A B) -> Prop => forall x1 : A, forall y1 : B, @GEQ ((prod A B) -> Prop) (f (@pair A B x1 y1)) (@GABS ((prod A B) -> Prop) (fun f' : (prod A B) -> Prop => forall x2 : A, forall y2 : B, @GEQ Prop (f' (@pair A B x2 y2)) ((lt2 x1 x2) /\ (lt3 y1 y2)))))).
+Axiom thm_WF_LEX_DEPENDENT : forall {A B : Type'}, forall R' : A -> A -> Prop, forall S' : A -> B -> B -> Prop, ((@WF A R') /\ (forall a : A, @WF B (S' a))) -> @WF (prod A B) (@GABS ((prod A B) -> (prod A B) -> Prop) (fun f : (prod A B) -> (prod A B) -> Prop => forall r1 : A, forall s1 : B, @eq ((prod A B) -> Prop) (f (@pair A B r1 s1)) (@GABS ((prod A B) -> Prop) (fun f' : (prod A B) -> Prop => forall r2 : A, forall s2 : B, @eq Prop (f' (@pair A B r2 s2)) ((R' r1 r2) \/ ((r1 = r2) /\ (S' r1 s1 s2))))))).
+Axiom thm_WF_LEX : forall {A B : Type'}, forall R' : A -> A -> Prop, forall S' : B -> B -> Prop, ((@WF A R') /\ (@WF B S')) -> @WF (prod A B) (@GABS ((prod A B) -> (prod A B) -> Prop) (fun f : (prod A B) -> (prod A B) -> Prop => forall r1 : A, forall s1 : B, @eq ((prod A B) -> Prop) (f (@pair A B r1 s1)) (@GABS ((prod A B) -> Prop) (fun f' : (prod A B) -> Prop => forall r2 : A, forall s2 : B, @eq Prop (f' (@pair A B r2 s2)) ((R' r1 r2) \/ ((r1 = r2) /\ (S' s1 s2))))))).
+Axiom thm_WF_POINTWISE : forall {A B : Type'} (lt2 : A -> A -> Prop) (lt3 : B -> B -> Prop), ((@WF A lt2) /\ (@WF B lt3)) -> @WF (prod A B) (@GABS ((prod A B) -> (prod A B) -> Prop) (fun f : (prod A B) -> (prod A B) -> Prop => forall x1 : A, forall y1 : B, @eq ((prod A B) -> Prop) (f (@pair A B x1 y1)) (@GABS ((prod A B) -> Prop) (fun f' : (prod A B) -> Prop => forall x2 : A, forall y2 : B, @eq Prop (f' (@pair A B x2 y2)) ((lt2 x1 x2) /\ (lt3 y1 y2)))))).
 Axiom thm_WF_num : @WF N N.lt.
 Axiom thm_WF_REC_num : forall {A : Type'}, forall H : (N -> A) -> N -> A, (forall f : N -> A, forall g : N -> A, forall n : N, (forall m : N, (N.lt m n) -> (f m) = (g m)) -> (H f n) = (H g n)) -> exists f : N -> A, forall n : N, (f n) = (H f n).
 Axiom thm_MEASURE : forall {A : Type'}, forall m : A -> N, (@MEASURE A m) = (fun x : A => fun y : A => N.lt (m x) (m y)).
@@ -491,8 +491,8 @@ Axiom thm_ARITH_PRE : (forall n : N, (N.pred (NUMERAL n)) = (NUMERAL (N.pred n))
 Axiom thm_ARITH_ADD : (forall m : N, forall n : N, (N.add (NUMERAL m) (NUMERAL n)) = (NUMERAL (N.add m n))) /\ (((N.add 0%N 0%N) = 0%N) /\ ((forall n : N, (N.add 0%N (BIT0 n)) = (BIT0 n)) /\ ((forall n : N, (N.add 0%N (BIT1 n)) = (BIT1 n)) /\ ((forall n : N, (N.add (BIT0 n) 0%N) = (BIT0 n)) /\ ((forall n : N, (N.add (BIT1 n) 0%N) = (BIT1 n)) /\ ((forall m : N, forall n : N, (N.add (BIT0 m) (BIT0 n)) = (BIT0 (N.add m n))) /\ ((forall m : N, forall n : N, (N.add (BIT0 m) (BIT1 n)) = (BIT1 (N.add m n))) /\ ((forall m : N, forall n : N, (N.add (BIT1 m) (BIT0 n)) = (BIT1 (N.add m n))) /\ (forall m : N, forall n : N, (N.add (BIT1 m) (BIT1 n)) = (BIT0 (N.succ (N.add m n)))))))))))).
 Axiom thm_ARITH_MULT : (forall m : N, forall n : N, (N.mul (NUMERAL m) (NUMERAL n)) = (NUMERAL (N.mul m n))) /\ (((N.mul 0%N 0%N) = 0%N) /\ ((forall n : N, (N.mul 0%N (BIT0 n)) = 0%N) /\ ((forall n : N, (N.mul 0%N (BIT1 n)) = 0%N) /\ ((forall n : N, (N.mul (BIT0 n) 0%N) = 0%N) /\ ((forall n : N, (N.mul (BIT1 n) 0%N) = 0%N) /\ ((forall m : N, forall n : N, (N.mul (BIT0 m) (BIT0 n)) = (BIT0 (BIT0 (N.mul m n)))) /\ ((forall m : N, forall n : N, (N.mul (BIT0 m) (BIT1 n)) = (N.add (BIT0 m) (BIT0 (BIT0 (N.mul m n))))) /\ ((forall m : N, forall n : N, (N.mul (BIT1 m) (BIT0 n)) = (N.add (BIT0 n) (BIT0 (BIT0 (N.mul m n))))) /\ (forall m : N, forall n : N, (N.mul (BIT1 m) (BIT1 n)) = (N.add (BIT1 m) (N.add (BIT0 n) (BIT0 (BIT0 (N.mul m n)))))))))))))).
 Axiom thm_ARITH_EXP : (forall m : N, forall n : N, (N.pow (NUMERAL m) (NUMERAL n)) = (NUMERAL (N.pow m n))) /\ (((N.pow 0%N 0%N) = (BIT1 0%N)) /\ ((forall m : N, (N.pow (BIT0 m) 0%N) = (BIT1 0%N)) /\ ((forall m : N, (N.pow (BIT1 m) 0%N) = (BIT1 0%N)) /\ ((forall n : N, (N.pow 0%N (BIT0 n)) = (N.mul (N.pow 0%N n) (N.pow 0%N n))) /\ ((forall m : N, forall n : N, (N.pow (BIT0 m) (BIT0 n)) = (N.mul (N.pow (BIT0 m) n) (N.pow (BIT0 m) n))) /\ ((forall m : N, forall n : N, (N.pow (BIT1 m) (BIT0 n)) = (N.mul (N.pow (BIT1 m) n) (N.pow (BIT1 m) n))) /\ ((forall n : N, (N.pow 0%N (BIT1 n)) = 0%N) /\ ((forall m : N, forall n : N, (N.pow (BIT0 m) (BIT1 n)) = (N.mul (BIT0 m) (N.mul (N.pow (BIT0 m) n) (N.pow (BIT0 m) n)))) /\ (forall m : N, forall n : N, (N.pow (BIT1 m) (BIT1 n)) = (N.mul (BIT1 m) (N.mul (N.pow (BIT1 m) n) (N.pow (BIT1 m) n)))))))))))).
-Axiom thm_ARITH_EVEN : (forall n : N, (EVEN (NUMERAL n)) = (EVEN n)) /\ (((EVEN 0%N) = True) /\ ((forall n : N, (EVEN (BIT0 n)) = True) /\ (forall n : N, (EVEN (BIT1 n)) = False))).
-Axiom thm_ARITH_ODD : (forall n : N, (ODD (NUMERAL n)) = (ODD n)) /\ (((ODD 0%N) = False) /\ ((forall n : N, (ODD (BIT0 n)) = False) /\ (forall n : N, (ODD (BIT1 n)) = True))).
+Axiom thm_ARITH_EVEN : (forall n : N, (N.Even (NUMERAL n)) = (N.Even n)) /\ (((N.Even 0%N) = True) /\ ((forall n : N, (N.Even (BIT0 n)) = True) /\ (forall n : N, (N.Even (BIT1 n)) = False))).
+Axiom thm_ARITH_ODD : (forall n : N, (N.Odd (NUMERAL n)) = (N.Odd n)) /\ (((N.Odd 0%N) = False) /\ ((forall n : N, (N.Odd (BIT0 n)) = False) /\ (forall n : N, (N.Odd (BIT1 n)) = True))).
 Axiom thm_ARITH_LE : (forall m : N, forall n : N, (N.le (NUMERAL m) (NUMERAL n)) = (N.le m n)) /\ (((N.le 0%N 0%N) = True) /\ ((forall n : N, (N.le (BIT0 n) 0%N) = (N.le n 0%N)) /\ ((forall n : N, (N.le (BIT1 n) 0%N) = False) /\ ((forall n : N, (N.le 0%N (BIT0 n)) = True) /\ ((forall n : N, (N.le 0%N (BIT1 n)) = True) /\ ((forall m : N, forall n : N, (N.le (BIT0 m) (BIT0 n)) = (N.le m n)) /\ ((forall m : N, forall n : N, (N.le (BIT0 m) (BIT1 n)) = (N.le m n)) /\ ((forall m : N, forall n : N, (N.le (BIT1 m) (BIT0 n)) = (N.lt m n)) /\ (forall m : N, forall n : N, (N.le (BIT1 m) (BIT1 n)) = (N.le m n)))))))))).
 Axiom thm_ARITH_LT : (forall m : N, forall n : N, (N.lt (NUMERAL m) (NUMERAL n)) = (N.lt m n)) /\ (((N.lt 0%N 0%N) = False) /\ ((forall n : N, (N.lt (BIT0 n) 0%N) = False) /\ ((forall n : N, (N.lt (BIT1 n) 0%N) = False) /\ ((forall n : N, (N.lt 0%N (BIT0 n)) = (N.lt 0%N n)) /\ ((forall n : N, (N.lt 0%N (BIT1 n)) = True) /\ ((forall m : N, forall n : N, (N.lt (BIT0 m) (BIT0 n)) = (N.lt m n)) /\ ((forall m : N, forall n : N, (N.lt (BIT0 m) (BIT1 n)) = (N.le m n)) /\ ((forall m : N, forall n : N, (N.lt (BIT1 m) (BIT0 n)) = (N.lt m n)) /\ (forall m : N, forall n : N, (N.lt (BIT1 m) (BIT1 n)) = (N.lt m n)))))))))).
 Axiom thm_ARITH_EQ : (forall m : N, forall n : N, ((NUMERAL m) = (NUMERAL n)) = (m = n)) /\ (((0%N = 0%N) = True) /\ ((forall n : N, ((BIT0 n) = 0%N) = (n = 0%N)) /\ ((forall n : N, ((BIT1 n) = 0%N) = False) /\ ((forall n : N, (0%N = (BIT0 n)) = (0%N = n)) /\ ((forall n : N, (0%N = (BIT1 n)) = False) /\ ((forall m : N, forall n : N, ((BIT0 m) = (BIT0 n)) = (m = n)) /\ ((forall m : N, forall n : N, ((BIT0 m) = (BIT1 n)) = False) /\ ((forall m : N, forall n : N, ((BIT1 m) = (BIT0 n)) = False) /\ (forall m : N, forall n : N, ((BIT1 m) = (BIT1 n)) = (m = n)))))))))).
@@ -894,7 +894,7 @@ Axiom thm_REAL_LE_LNEG : forall x : real, forall y : real, (real_le (real_neg x)
 Axiom thm_REAL_LE_NEG2 : forall x : real, forall y : real, (real_le (real_neg x) (real_neg y)) = (real_le y x).
 Axiom thm_REAL_LE_RNEG : forall x : real, forall y : real, (real_le x (real_neg y)) = (real_le (real_add x y) (real_of_num (NUMERAL 0%N))).
 Axiom thm_REAL_OF_NUM_POW : forall x : N, forall n : N, (real_pow (real_of_num x) n) = (real_of_num (N.pow x n)).
-Axiom thm_REAL_POW_NEG : forall x : real, forall n : N, (real_pow (real_neg x) n) = (@COND real (EVEN n) (real_pow x n) (real_neg (real_pow x n))).
+Axiom thm_REAL_POW_NEG : forall x : real, forall n : N, (real_pow (real_neg x) n) = (@COND real (N.Even n) (real_pow x n) (real_neg (real_pow x n))).
 Axiom thm_REAL_ABS_NUM : forall n : N, (real_abs (real_of_num n)) = (real_of_num n).
 Axiom thm_REAL_ABS_NEG : forall x : real, (real_abs (real_neg x)) = (real_abs x).
 Axiom thm_REAL_LTE_TOTAL : forall x : real, forall y : real, (real_lt x y) \/ (real_le y x).
@@ -1166,15 +1166,15 @@ Axiom thm_REAL_POW_LT2_REV : forall n : N, forall x : real, forall y : real, ((r
 Axiom thm_REAL_POW_EQ : forall n : N, forall x : real, forall y : real, ((~ (n = (NUMERAL 0%N))) /\ ((real_le (real_of_num (NUMERAL 0%N)) x) /\ ((real_le (real_of_num (NUMERAL 0%N)) y) /\ ((real_pow x n) = (real_pow y n))))) -> x = y.
 Axiom thm_REAL_POW_EQ_ABS : forall n : N, forall x : real, forall y : real, ((~ (n = (NUMERAL 0%N))) /\ ((real_pow x n) = (real_pow y n))) -> (real_abs x) = (real_abs y).
 Axiom thm_REAL_POW_EQ_1_IMP : forall x : real, forall n : N, ((~ (n = (NUMERAL 0%N))) /\ ((real_pow x n) = (real_of_num (NUMERAL (BIT1 0%N))))) -> (real_abs x) = (real_of_num (NUMERAL (BIT1 0%N))).
-Axiom thm_REAL_POW_EQ_1 : forall x : real, forall n : N, ((real_pow x n) = (real_of_num (NUMERAL (BIT1 0%N)))) = ((((real_abs x) = (real_of_num (NUMERAL (BIT1 0%N)))) /\ ((real_lt x (real_of_num (NUMERAL 0%N))) -> EVEN n)) \/ (n = (NUMERAL 0%N))).
-Axiom thm_REAL_POW_LT2_ODD : forall n : N, forall x : real, forall y : real, ((real_lt x y) /\ (ODD n)) -> real_lt (real_pow x n) (real_pow y n).
-Axiom thm_REAL_POW_LE2_ODD : forall n : N, forall x : real, forall y : real, ((real_le x y) /\ (ODD n)) -> real_le (real_pow x n) (real_pow y n).
-Axiom thm_REAL_POW_LT2_ODD_EQ : forall n : N, forall x : real, forall y : real, (ODD n) -> (real_lt (real_pow x n) (real_pow y n)) = (real_lt x y).
-Axiom thm_REAL_POW_LE2_ODD_EQ : forall n : N, forall x : real, forall y : real, (ODD n) -> (real_le (real_pow x n) (real_pow y n)) = (real_le x y).
-Axiom thm_REAL_POW_EQ_ODD_EQ : forall n : N, forall x : real, forall y : real, (ODD n) -> ((real_pow x n) = (real_pow y n)) = (x = y).
-Axiom thm_REAL_POW_EQ_ODD : forall n : N, forall x : real, forall y : real, ((ODD n) /\ ((real_pow x n) = (real_pow y n))) -> x = y.
-Axiom thm_REAL_POW_EQ_EQ : forall n : N, forall x : real, forall y : real, ((real_pow x n) = (real_pow y n)) = (@COND Prop (EVEN n) ((n = (NUMERAL 0%N)) \/ ((real_abs x) = (real_abs y))) (x = y)).
-Axiom thm_REAL_EVENPOW_ABS : forall x : real, forall n : N, (EVEN n) -> (real_pow (real_abs x) n) = (real_pow x n).
+Axiom thm_REAL_POW_EQ_1 : forall x : real, forall n : N, ((real_pow x n) = (real_of_num (NUMERAL (BIT1 0%N)))) = ((((real_abs x) = (real_of_num (NUMERAL (BIT1 0%N)))) /\ ((real_lt x (real_of_num (NUMERAL 0%N))) -> N.Even n)) \/ (n = (NUMERAL 0%N))).
+Axiom thm_REAL_POW_LT2_ODD : forall n : N, forall x : real, forall y : real, ((real_lt x y) /\ (N.Odd n)) -> real_lt (real_pow x n) (real_pow y n).
+Axiom thm_REAL_POW_LE2_ODD : forall n : N, forall x : real, forall y : real, ((real_le x y) /\ (N.Odd n)) -> real_le (real_pow x n) (real_pow y n).
+Axiom thm_REAL_POW_LT2_ODD_EQ : forall n : N, forall x : real, forall y : real, (N.Odd n) -> (real_lt (real_pow x n) (real_pow y n)) = (real_lt x y).
+Axiom thm_REAL_POW_LE2_ODD_EQ : forall n : N, forall x : real, forall y : real, (N.Odd n) -> (real_le (real_pow x n) (real_pow y n)) = (real_le x y).
+Axiom thm_REAL_POW_EQ_ODD_EQ : forall n : N, forall x : real, forall y : real, (N.Odd n) -> ((real_pow x n) = (real_pow y n)) = (x = y).
+Axiom thm_REAL_POW_EQ_ODD : forall n : N, forall x : real, forall y : real, ((N.Odd n) /\ ((real_pow x n) = (real_pow y n))) -> x = y.
+Axiom thm_REAL_POW_EQ_EQ : forall n : N, forall x : real, forall y : real, ((real_pow x n) = (real_pow y n)) = (@COND Prop (N.Even n) ((n = (NUMERAL 0%N)) \/ ((real_abs x) = (real_abs y))) (x = y)).
+Axiom thm_REAL_EVENPOW_ABS : forall x : real, forall n : N, (N.Even n) -> (real_pow (real_abs x) n) = (real_pow x n).
 Axiom thm_REAL_OF_NUM_MOD : forall m : N, forall n : N, (real_of_num (N.modulo m n)) = (real_sub (real_of_num m) (real_mul (real_of_num (N.div m n)) (real_of_num n))).
 Axiom thm_REAL_OF_NUM_DIV : forall m : N, forall n : N, (real_of_num (N.div m n)) = (real_sub (real_div (real_of_num m) (real_of_num n)) (real_div (real_of_num (N.modulo m n)) (real_of_num n))).
 Axiom thm_REAL_CONVEX_BOUND2_LT : forall (b : real), forall x : real, forall y : real, forall a : real, forall u : real, forall v : real, ((real_lt x a) /\ ((real_lt y b) /\ ((real_le (real_of_num (NUMERAL 0%N)) u) /\ ((real_le (real_of_num (NUMERAL 0%N)) v) /\ ((real_add u v) = (real_of_num (NUMERAL (BIT1 0%N)))))))) -> real_lt (real_add (real_mul u x) (real_mul v y)) (real_add (real_mul u a) (real_mul v b)).
@@ -1250,7 +1250,7 @@ Axiom thm_REAL_LE_LSQRT : forall x : real, forall y : real, ((real_le (real_of_n
 Axiom thm_REAL_LE_RSQRT : forall x : real, forall y : real, (real_le (real_pow x (NUMERAL (BIT0 (BIT1 0%N)))) y) -> real_le x (sqrt y).
 Axiom thm_REAL_LT_LSQRT : forall x : real, forall y : real, ((real_le (real_of_num (NUMERAL 0%N)) y) /\ (real_lt x (real_pow y (NUMERAL (BIT0 (BIT1 0%N)))))) -> real_lt (sqrt x) y.
 Axiom thm_REAL_LT_RSQRT : forall x : real, forall y : real, (real_lt (real_pow x (NUMERAL (BIT0 (BIT1 0%N)))) y) -> real_lt x (sqrt y).
-Axiom thm_SQRT_EVEN_POW2 : forall n : N, (EVEN n) -> (sqrt (real_pow (real_of_num (NUMERAL (BIT0 (BIT1 0%N)))) n)) = (real_pow (real_of_num (NUMERAL (BIT0 (BIT1 0%N)))) (N.div n (NUMERAL (BIT0 (BIT1 0%N))))).
+Axiom thm_SQRT_EVEN_POW2 : forall n : N, (N.Even n) -> (sqrt (real_pow (real_of_num (NUMERAL (BIT0 (BIT1 0%N)))) n)) = (real_pow (real_of_num (NUMERAL (BIT0 (BIT1 0%N)))) (N.div n (NUMERAL (BIT0 (BIT1 0%N))))).
 Axiom thm_REAL_DIV_SQRT : forall x : real, (real_le (real_of_num (NUMERAL 0%N)) x) -> (real_div x (sqrt x)) = (sqrt x).
 Axiom thm_REAL_RSQRT_LE : forall x : real, forall y : real, ((real_le (real_of_num (NUMERAL 0%N)) x) /\ ((real_le (real_of_num (NUMERAL 0%N)) y) /\ (real_le x (sqrt y)))) -> real_le (real_pow x (NUMERAL (BIT0 (BIT1 0%N)))) y.
 Axiom thm_REAL_LSQRT_LE : forall x : real, forall y : real, ((real_le (real_of_num (NUMERAL 0%N)) x) /\ (real_le (sqrt x) y)) -> real_le x (real_pow y (NUMERAL (BIT0 (BIT1 0%N)))).

@@ -62,7 +62,7 @@ builtin "fun_ext" ≔ fun_ext;
 builtin "prop_ext" ≔ prop_ext;
 
 // unit type
-builtin "unit" ≔ 1;
+builtin "unit" ≔ unit;
 builtin "tt" ≔ one;
 builtin "one_def" ≔ one_def;
 builtin "one_ABS" ≔ one_ABS;
@@ -83,6 +83,7 @@ builtin "fst" ≔ FST;
 builtin "FST_def" ≔ FST_def;
 builtin "snd" ≔ SND;
 builtin "SND_def" ≔ SND_def;
+builtin "eq" ≔ GEQ;
 
 // infinite type ind
 builtin "ind" ≔ ind;
@@ -131,16 +132,16 @@ builtin "N.min" ≔ MIN;
 builtin "MIN_def" ≔ MIN_def;
 builtin "N.sub" ≔ -;
 builtin "minus_def" ≔ -_def;
-//builtin "Factorial.fact" ≔ FACT;
-//builtin "FACT_def" ≔ FACT_def;
+builtin "factN_of_nat" ≔ FACT;
+builtin "FACT_def" ≔ FACT_def;
 builtin "N.div" ≔ DIV;
 builtin "DIV_def" ≔ DIV_def;
 builtin "N.modulo" ≔ MOD;
 builtin "MOD_def" ≔ MOD_def;
-//builtin "N.Even" ≔ EVEN;
-//builtin "EVEN_def" ≔ EVEN_def;
-//builtin "N.Odd" ≔ ODD;
-//builtin "ODD_def" ≔ ODD_def;
+builtin "N.Even" ≔ EVEN;
+builtin "EVEN_def" ≔ EVEN_def;
+builtin "N.Odd" ≔ ODD;
+builtin "ODD_def" ≔ ODD_def;
 
 // indtypes
 builtin "NUMLEFT" ≔ NUMLEFT; // not mandatory
