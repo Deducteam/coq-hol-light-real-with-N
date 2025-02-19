@@ -132,7 +132,7 @@ builtin "N.min" ≔ MIN;
 builtin "MIN_def" ≔ MIN_def;
 builtin "N.sub" ≔ -;
 builtin "minus_def" ≔ -_def;
-builtin "factN_of_nat" ≔ FACT;
+builtin "fact" ≔ FACT;
 builtin "FACT_def" ≔ FACT_def;
 builtin "N.div" ≔ DIV;
 builtin "DIV_def" ≔ DIV_def;

@@ -1168,45 +1168,18 @@ Proof.
       exact (N.sub_succ_r x y).
 Qed.
 
-(*Definition GEQ {A : Type'} : A -> A -> Prop := fun a : A => fun b : A => a = b.
+Definition fact := N.peano_rect (fun _ => N) 1 (fun n r => N.succ n * r).
 
-Lemma GEQ_def {A : Type'} : (@GEQ A) = (@eq A).
-Proof. ext x y. reflexivity. Qed.*)
-
-Require Import Coq.Arith.Factorial.
-
-Definition factN_of_nat x := N.of_nat (fact (N.to_nat x)).
-
-Lemma factN_of_nat0: factN_of_nat 0 = 1.
-Proof.
-  unfold factN_of_nat.
-  rewrite Nnat.N2Nat.inj_0.
-  unfold fact.
-  exact (Nnat.N2Nat.id 1).
-Qed.
-
-Lemma factN_of_natS n : factN_of_nat (N.succ n) = N.succ n * factN_of_nat n.
-Proof.
-  unfold factN_of_nat.
-  rewrite Nnat.N2Nat.inj_succ.
-  simpl.
-  lia.
-Qed.
-
-Lemma FACT_def : factN_of_nat = @ε ((prod N (prod N (prod N N))) -> N -> N) (fun FACT' : (prod N (prod N (prod N N))) -> N -> N => forall _2944 : prod N (prod N (prod N N)), ((FACT' _2944 (NUMERAL 0%N)) = (NUMERAL (BIT1 0%N))) /\ (forall n : N, (FACT' _2944 (N.succ n)) = (N.mul (N.succ n) (FACT' _2944 n)))) (@pair N (prod N (prod N N)) (NUMERAL (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0%N)))))))) (@pair N (prod N N) (NUMERAL (BIT1 (BIT0 (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 0%N)))))))) (@pair N N (NUMERAL (BIT1 (BIT1 (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 0%N)))))))) (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0%N))))))))))).
+Lemma FACT_def : fact = @ε ((prod N (prod N (prod N N))) -> N -> N) (fun FACT' : (prod N (prod N (prod N N))) -> N -> N => forall _2944 : prod N (prod N (prod N N)), ((FACT' _2944 (NUMERAL 0%N)) = (NUMERAL (BIT1 0%N))) /\ (forall n : N, (FACT' _2944 (N.succ n)) = (N.mul (N.succ n) (FACT' _2944 n)))) (@pair N (prod N (prod N N)) (NUMERAL (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0%N)))))))) (@pair N (prod N N) (NUMERAL (BIT1 (BIT0 (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 0%N)))))))) (@pair N N (NUMERAL (BIT1 (BIT1 (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 0%N)))))))) (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0%N))))))))))).
 Proof.
   unfold NUMERAL. cbn. align_ε.
-  - split.
-    + exact factN_of_nat0.
-    + exact factN_of_natS.
-  - intros FACT' [h0 hS].
-    apply fun_ext.
-    apply N.peano_ind.
-    + rewrite h0.
-      exact factN_of_nat0.
-    + intros n IH.
-      rewrite hS, <- IH.
-      exact (factN_of_natS n).
+
+  split. reflexivity.
+  intro n. unfold fact. rewrite N.peano_rect_succ. reflexivity.
+
+  intros f [f0 fs]. ext n. pattern n. apply N.peano_ind.
+  rewrite f0. reflexivity.
+  intros x h. unfold fact. rewrite fs, N.peano_rect_succ, <- h. reflexivity.
 Qed.
 
 Lemma Nadd_sub a b : a + b - a = b. Proof. lia. Qed.

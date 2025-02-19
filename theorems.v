@@ -341,11 +341,11 @@ Axiom thm_RIGHT_SUB_DISTRIB : forall m : N, forall n : N, forall p : N, (N.mul (
 Axiom thm_SUC_SUB1 : forall n : N, (N.sub (N.succ n) (NUMERAL (BIT1 0%N))) = n.
 Axiom thm_EVEN_SUB : forall m : N, forall n : N, (N.Even (N.sub m n)) = ((N.le m n) \/ ((N.Even m) = (N.Even n))).
 Axiom thm_ODD_SUB : forall m : N, forall n : N, (N.Odd (N.sub m n)) = ((N.lt n m) /\ (~ ((N.Odd m) = (N.Odd n)))).
-Axiom thm_FACT : ((factN_of_nat (NUMERAL 0%N)) = (NUMERAL (BIT1 0%N))) /\ (forall n : N, (factN_of_nat (N.succ n)) = (N.mul (N.succ n) (factN_of_nat n))).
-Axiom thm_FACT_LT : forall n : N, N.lt (NUMERAL 0%N) (factN_of_nat n).
-Axiom thm_FACT_LE : forall n : N, N.le (NUMERAL (BIT1 0%N)) (factN_of_nat n).
-Axiom thm_FACT_NZ : forall n : N, ~ ((factN_of_nat n) = (NUMERAL 0%N)).
-Axiom thm_FACT_MONO : forall m : N, forall n : N, (N.le m n) -> N.le (factN_of_nat m) (factN_of_nat n).
+Axiom thm_FACT : ((fact (NUMERAL 0%N)) = (NUMERAL (BIT1 0%N))) /\ (forall n : N, (fact (N.succ n)) = (N.mul (N.succ n) (fact n))).
+Axiom thm_FACT_LT : forall n : N, N.lt (NUMERAL 0%N) (fact n).
+Axiom thm_FACT_LE : forall n : N, N.le (NUMERAL (BIT1 0%N)) (fact n).
+Axiom thm_FACT_NZ : forall n : N, ~ ((fact n) = (NUMERAL 0%N)).
+Axiom thm_FACT_MONO : forall m : N, forall n : N, (N.le m n) -> N.le (fact m) (fact n).
 Axiom thm_EXP_LT_0 : forall n : N, forall x : N, (N.lt (NUMERAL 0%N) (N.pow x n)) = ((~ (x = (NUMERAL 0%N))) \/ (n = (NUMERAL 0%N))).
 Axiom thm_LT_EXP : forall x : N, forall m : N, forall n : N, (N.lt (N.pow x m) (N.pow x n)) = (((N.le (NUMERAL (BIT0 (BIT1 0%N))) x) /\ (N.lt m n)) \/ ((x = (NUMERAL 0%N)) /\ ((~ (m = (NUMERAL 0%N))) /\ (n = (NUMERAL 0%N))))).
 Axiom thm_LE_EXP : forall x : N, forall m : N, forall n : N, (N.le (N.pow x m) (N.pow x n)) = (@COND Prop (x = (NUMERAL 0%N)) ((m = (NUMERAL 0%N)) -> n = (NUMERAL 0%N)) ((x = (NUMERAL (BIT1 0%N))) \/ (N.le m n))).
