@@ -129,7 +129,7 @@ remove_empty_modules() {
     sed -e "s/${base}_//g" \
         -e "/^Require Import ${root_path}\.theory_hol\.$/d" \
         -e "/^Require Import ${root_path}\.types\.$/d" \
-        -e '/^Require Import ${root_path}\.axioms\.$/d' \
+        -e "/^Require Import ${root_path}\.axioms\.$/d" \
         $1
 }
 
@@ -196,7 +196,6 @@ stage 8 patch_hol_light
 stage 9 dump_proofs
 stage 10 config_output_dir
 stage 11 create_and_check_opam_library
-exit
 stage 12 compare_opam_files
 stage 13 translate_proofs
 stage 14 check_proofs
