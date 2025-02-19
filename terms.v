@@ -1,5 +1,4 @@
 Require Import Coq.NArith.BinNat HOLLight_Real_With_N.mappings.
-Require Import HOLLight_Real_With_N.theory_hol.
 Definition _FALSITY_ : Prop := False.
 Lemma _FALSITY__def : _FALSITY_ = False.
 Proof. exact (eq_refl _FALSITY_). Qed.

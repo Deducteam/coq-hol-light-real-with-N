@@ -1,5 +1,4 @@
 Require Import Coq.NArith.BinNat HOLLight_Real_With_N.mappings.
-Require Import HOLLight_Real_With_N.theory_hol.
 Require Import HOLLight_Real_With_N.terms.
 Axiom thm_T_DEF : True = ((fun p : Prop => p) = (fun p : Prop => p)).
 Axiom thm_AND_DEF : and = (fun p : Prop => fun q : Prop => (fun f : Prop -> Prop -> Prop => f p q) = (fun f : Prop -> Prop -> Prop => f True True)).

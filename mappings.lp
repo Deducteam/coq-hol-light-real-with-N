@@ -53,6 +53,8 @@ builtin "ex_elim" ≔ ∃ₑ;
 builtin "eq_refl" ≔ REFL;
 builtin "EQ_MP" ≔ EQ_MP;
 builtin "MK_COMB" ≔ MK_COMB;
+builtin "eq_trans" ≔ TRANS;
+builtin "eq_sym" ≔ SYM;
 
 // HOL-Light axioms
 builtin "ε" ≔ ε;

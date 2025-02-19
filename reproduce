@@ -125,6 +125,14 @@ check_proofs() {
     cd ..
 }
 
+remove_empty_modules() {
+    sed -e "s/${base}_//g" \
+        -e "/^Require Import ${root_path}\.theory_hol\.$/d" \
+        -e "/^Require Import ${root_path}\.types\.$/d" \
+        -e '/^Require Import ${root_path}\.axioms\.$/d' \
+        $1
+}
+
 create_and_check_opam_library() {
     line
     echo create opam library ...
@@ -133,9 +141,9 @@ create_and_check_opam_library() {
     cd ..
     mkdir -p opam
     cd opam
-    cp ../../Makefile ../../mappings.v ../output/theory_hol.v .
-    sed -e "s/${base}_//g" -e "/^Require Import ${root_path}.types.$/d" ../output/${base}_terms.v > terms.v
-    sed -e "s/${base}_//g" -e "/^Require Import ${root_path}.types.$/d" -e '/^Require Import ${root_path}.axioms.$/d' ../output/${base}_opam.v > theorems.v
+    cp ../../Makefile ../../mappings.v .
+    remove_empty_modules ../output/${base}_terms.v > terms.v
+    remove_empty_modules ../output/${base}_opam.v > theorems.v
     make
     cd ..
 }
@@ -188,6 +196,7 @@ stage 8 patch_hol_light
 stage 9 dump_proofs
 stage 10 config_output_dir
 stage 11 create_and_check_opam_library
+exit
 stage 12 compare_opam_files
 stage 13 translate_proofs
 stage 14 check_proofs
