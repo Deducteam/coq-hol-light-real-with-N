@@ -1301,6 +1301,10 @@ Proof.
   exact N.odd_0.
 Qed.
 
+(* N.even_odd since Coq >= 8.20 *)
+Lemma even_odd : forall n, N.even (2 * n + 1) = false.
+Proof. intros n; rewrite <- N.negb_odd, N.odd_odd; reflexivity. Qed.
+
 Lemma NEvenS: forall n: N, N.Even (N.succ n) = ~ N.Even n.
 Proof.
   intro n. 
@@ -1310,7 +1314,7 @@ Proof.
       apply ex_ind.
       intros m o. 
       rewrite o, <- (prop_ext_eq (N.even_spec _)), (Bool.not_true_iff_false _). 
-      exact (N.even_odd _).
+      exact (even_odd _).
     - case (N.Even_or_Odd n). 
       + exact (absurd _). 
       + trivial.
