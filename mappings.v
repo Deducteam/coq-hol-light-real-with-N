@@ -1314,7 +1314,7 @@ Proof.
     apply ex_ind. 
     intros m o. 
     rewrite o, <- (prop_ext_eq (N.odd_spec _)), (Bool.not_true_iff_false _). 
-    exact (N.odd_even _).
+    exact (odd_even _).
   - case (N.Even_or_Odd n). 
     + trivial. 
     + exact (absurd _).
