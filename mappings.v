@@ -1282,6 +1282,14 @@ Proof. intros n; rewrite N.odd_spec; exists n; reflexivity. Qed.
 Lemma even_odd : forall n, N.even (2 * n + 1) = false.
 Proof. intros n; rewrite <- N.negb_odd, odd_odd; reflexivity. Qed.
 
+(* N.even_even since Coq >= 8.20 *)
+Lemma even_even : forall n, N.even (2 * n) = true.
+Proof. intros n; apply N.even_spec; exists n; reflexivity. Qed.
+
+(* N.odd_even since Coq >= 8.20 *)
+Lemma odd_even : forall n, N.odd (2 * n) = false.
+Proof. intros n; rewrite <- N.negb_even, even_even; reflexivity. Qed.
+
 Lemma NEvenS: forall n: N, N.Even (N.succ n) = ~ N.Even n.
 Proof.
   intro n. 
