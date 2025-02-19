@@ -69,9 +69,6 @@ Proof. exact (eq_refl BIT1). Qed.
 Definition minimal : (N -> Prop) -> N := fun _6536 : N -> Prop => @ε N (fun n : N => (_6536 n) /\ (forall m : N, (N.lt m n) -> ~ (_6536 m))).
 Lemma minimal_def : minimal = (fun _6536 : N -> Prop => @ε N (fun n : N => (_6536 n) /\ (forall m : N, (N.lt m n) -> ~ (_6536 m)))).
 Proof. exact (eq_refl minimal). Qed.
-Definition WF {A : Type'} : (A -> A -> Prop) -> Prop := fun _6923 : A -> A -> Prop => forall P : A -> Prop, (exists x : A, P x) -> exists x : A, (P x) /\ (forall y : A, (_6923 y x) -> ~ (P y)).
-Lemma WF_def {A : Type'} : (@WF A) = (fun _6923 : A -> A -> Prop => forall P : A -> Prop, (exists x : A, P x) -> exists x : A, (P x) /\ (forall y : A, (_6923 y x) -> ~ (P y))).
-Proof. exact (eq_refl (@WF A)). Qed.
 Definition MEASURE {A : Type'} : (A -> N) -> A -> A -> Prop := fun _8094 : A -> N => fun x : A => fun y : A => N.lt (_8094 x) (_8094 y).
 Lemma MEASURE_def {A : Type'} : (@MEASURE A) = (fun _8094 : A -> N => fun x : A => fun y : A => N.lt (_8094 x) (_8094 y)).
 Proof. exact (eq_refl (@MEASURE A)). Qed.
