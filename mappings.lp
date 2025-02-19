@@ -143,6 +143,10 @@ builtin "EVEN_def" ≔ EVEN_def;
 builtin "N.Odd" ≔ ODD;
 builtin "ODD_def" ≔ ODD_def;
 
+// wf
+builtin "well_founded" ≔ WF;
+builtin "WF_def" ≔ WF_def;
+
 // indtypes
 builtin "NUMLEFT" ≔ NUMLEFT; // not mandatory
 builtin "NUMLEFT_def" ≔ NUMLEFT_def; // not mandatory

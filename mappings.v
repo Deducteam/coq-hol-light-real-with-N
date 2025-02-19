@@ -1301,9 +1301,13 @@ Proof.
   exact N.odd_0.
 Qed.
 
+(* N.odd_odd since Coq >= 8.20 *)
+Lemma odd_odd : forall n, N.odd (2 * n + 1) = true.
+Proof. intros n; rewrite N.odd_spec; exists n; reflexivity. Qed.
+
 (* N.even_odd since Coq >= 8.20 *)
 Lemma even_odd : forall n, N.even (2 * n + 1) = false.
-Proof. intros n; rewrite <- N.negb_odd, N.odd_odd; reflexivity. Qed.
+Proof. intros n; rewrite <- N.negb_odd, odd_odd; reflexivity. Qed.
 
 Lemma NEvenS: forall n: N, N.Even (N.succ n) = ~ N.Even n.
 Proof.
@@ -1661,15 +1665,15 @@ Proof.
     assumption.
 Qed.
 
-Definition MEASURE {A : Type'} : (A -> N) -> A -> A -> Prop := fun _8094 : A -> N => fun x : A => fun y : A => N.lt (_8094 x) (_8094 y).
+(*Definition MEASURE {A : Type'} : (A -> N) -> A -> A -> Prop := fun f : A -> N => @Wf_nat.gtof A (fun x : A => N.to_nat (f x)).
 
-Lemma MEASURE_def {A : Type'} : (fun f : A -> N => @Wf_nat.gtof A (fun x : A => N.to_nat (f x))) = (@MEASURE A).
+Lemma MEASURE_def {A : Type'} : (fun f : A -> N => @Wf_nat.gtof A (fun x : A => N.to_nat (f x))) = (fun _8094 : A -> N => fun x : A => fun y : A => N.lt (_8094 x) (_8094 y)).
 Proof.
   apply fun_ext; intro f.
   unfold Wf_nat.gtof, MEASURE.
   ext x y.
   exact (inj_lt _ _).
-Qed.
+Qed.*)
 
 (****************************************************************************)
 (* Alignment of recspace, the HOL-Light type used to encode inductive types. *)
