@@ -4,8 +4,8 @@ set -e # to exit as soon as there is an error
 
 hollight_version=3.0.0 # for dependencies
 hollight_commit=28e4aed
-hol2dk_commit=3a265dd
-lambdapi_commit=08d0f00d
+hol2dk_commit=abf12e1
+lambdapi_commit=eeb280b9
 ocaml_version=5.2.1
 coq_version=8.20.1
 
@@ -103,7 +103,7 @@ config_output_dir() {
     mkdir -p output
     cd output
     if test -f Makefile; then make $jobs clean-all; fi
-    hol2dk config $hollight_file $root_path Coq.NArith.BinNat ../../mappings.v ../../mappings.mk ../../mappings.lp
+    hol2dk config $hollight_file $root_path Coq.NArith.BinNat ../../type.v ../../mappings.v ../../mappings.lp
     cd ..
 }
 
@@ -141,7 +141,7 @@ create_and_check_opam_library() {
     cd ..
     mkdir -p opam
     cd opam
-    cp ../../Makefile ../../mappings.v .
+    cp ../../Makefile ../../type.v ../../mappings.v .
     remove_empty_modules ../output/${base}_terms.v > terms.v
     remove_empty_modules ../output/${base}_opam.v > theorems.v
     make
