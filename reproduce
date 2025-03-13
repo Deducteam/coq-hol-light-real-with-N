@@ -144,6 +144,7 @@ create_and_check_opam_library() {
     cp ../../Makefile ../../type.v ../../mappings.v .
     remove_empty_modules ../output/${base}_terms.v > terms.v
     remove_empty_modules ../output/${base}_opam.v > theorems.v
+    sed -i -e 's/NUMERAL //g' terms.v theorems.v
     make
     cd ..
 }
