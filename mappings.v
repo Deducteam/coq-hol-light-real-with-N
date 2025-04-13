@@ -2244,7 +2244,7 @@ Qed.
 Lemma hol_N_recursive_align2_varright {U A B : Type'} {uv0 : U} {TA : A -> A} (x : A -> B) (f : A -> N -> B -> B) : @ε (U -> A -> N -> B) (fun f' : U -> A -> N -> B => forall uv : U, (forall a : A, f' uv a N0 = x a) /\ (forall (a : A) (n : N), (f' uv a (N.succ n) = f a n (f' uv (TA a) n)))) uv0 = let fix g (a : A) (n : nat) := match n with |O => x a |S n => f a (N.of_nat n) (g (TA a) n) end in fun a n => g a (N.to_nat n).
 Proof.
 apply eq_sym. apply (hol_uv_elim (fun f' : A -> N -> B => (forall a : A, f' a 0 = x a) /\ (forall (a : A) (n : N), f' a (N.succ n) = f a n (f' (TA a) n)))). split;intro H. 
-  { destruct H. intro a. ext n. revert n a. Search "peano_rect". 
+  { destruct H. intro a. ext n. revert n a. 
   apply (N.peano_rect (fun n => forall (a : A), g' a n = (let fix g (a0 : A) (n0 : nat) {struct n0} : B := match n0 with | 0%nat => x a0 | S n1 => f a0 (N.of_nat n1) (g (TA a0) n1) end in fun (a0 : A) (n0 : N) => g a0 (N.to_nat n0)) a n)). 
   now intro;rewrite H. intros n IHn a. rewrite H0. rewrite IHn. simpl. rewrite Nnat.N2Nat.inj_succ. now rewrite Nnat.N2Nat.id. }
   { split;intros. now rewrite H. rewrite H. rewrite H. simpl. rewrite Nnat.N2Nat.inj_succ. now rewrite Nnat.N2Nat.id. }
