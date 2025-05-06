@@ -1,3 +1,4 @@
 - [Frédéric Blanqui](https://blanqui.gitlabpages.inria.fr/) for the alignment of unary and binary natural numbers, and real numbers
 - [Théo Winterhalter](https://theowinterhalter.github.io/) for tactics
 - [Jérémy Dubut](https://jeremydubut.com/) for the alignment of EVEN, ODD, WF
+- Antoine Gontard for the alignement tactics on N and list
