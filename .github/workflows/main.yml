@@ -1,5 +1,7 @@
 # following https://github.com/coq-community/docker-coq-action
 
+name: CI
+
 on:
   pull_request:
     types: [opened, synchronize, reopened]
@@ -10,7 +12,7 @@ on:
 
 jobs:
 
-  test1:
+  coq/coq-hol-light:
     # the OS must be GNU/Linux to be able to use the docker-coq-action
     runs-on: ubuntu-latest
     strategy:
@@ -26,7 +28,7 @@ jobs:
           coq_version: ${{ matrix.coq_version }}
           after_script: opam install -y coq-hol-light.${{ matrix.coq-hol-light_version }}
 
-  test2:
+  coq/coq-hol-light.dev:
     # the OS must be GNU/Linux to be able to use the docker-coq-action
     runs-on: ubuntu-latest
     strategy:
@@ -40,6 +42,7 @@ jobs:
           opam_file: 'coq-hol-light-real-with-N.opam'
           coq_version: ${{ matrix.coq_version }}
           after_script: |
+            git config --global --add safe.directory /github/workspace
             git checkout git@github.com:Deducteam/coq-hol-light.git
             cd coq-hol-light
             opam install -y .
