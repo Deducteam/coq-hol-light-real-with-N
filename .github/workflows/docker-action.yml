@@ -17,12 +17,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        coq-version: [dev, 8.20, 8.19]
-        coq-hol-light-version: [3.0.0] #dev, 2.0.0, 1.0.0
+        coq_version: [dev, 8.20, 8.19]
+        coq-hol-light_version: [3.0.0] #dev, 2.0.0, 1.0.0
     steps:
       - uses: actions/checkout@v4
       - uses: coq-community/docker-coq-action@v1
         with:
           opam_file: 'coq-hol-light-real-with-N.opam'
-          coq-version: ${{ matrix.coq-version }}
-          after_script: opam install coq-hol-light.${{ matrix.coq-hol-light-version }}
+          coq_version: ${{ matrix.coq_version }}
+          after_script: opam install -y coq-hol-light.${{ matrix.coq-hol-light_version }}
