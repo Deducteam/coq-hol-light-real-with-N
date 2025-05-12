@@ -40,12 +40,8 @@ jobs:
       options: --user root
     steps:
       - uses: actions/checkout@v4
+      - run: opam install -y .
       - run: |
-          pwd
-          echo $opamroot
-          export OPAMROOT="$opamroot"
-          opam list
-          opam install -y .
           git checkout https://github.com/Deducteam/coq-hol-light.git
           cd coq-hol-light
           opam install -y .
@@ -63,9 +59,8 @@ jobs:
       options: --user root
     steps:
       - uses: actions/checkout@v4
+      - run: opam install -y .
       - run: |
-          export OPAMROOT="$opamroot"
-          opam install -y .
           git checkout https://github.com/Deducteam/coq-hol-light.git
           cd coq-hol-light
           opam install -y .
