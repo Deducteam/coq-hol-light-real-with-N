@@ -34,7 +34,7 @@ jobs:
       matrix:
         coq_version: ['8.20', 8.19]
     container:
-      image: coqorg/coq.${{ matrix.coq_version }}
+      image: coqorg/coq:${{ matrix.coq_version }}
       options: --user root
     steps:
       - uses: actions/checkout@v4
@@ -51,9 +51,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        coq_version: ['9.0']
+        coq_version: [dev, '9.0']
     container:
-      image: rocq/rocq-prover.${{ matrix.coq_version }}
+      image: rocq/rocq-prover:${{ matrix.coq_version }}
       options: --user root
     steps:
       - uses: actions/checkout@v4
