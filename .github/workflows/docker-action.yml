@@ -18,7 +18,7 @@ jobs:
       fail-fast: false
       matrix:
         coq_version: [dev, '8.20', 8.19]
-        coq-hol-light_version: [3.0.0] #dev, 2.0.0, 1.0.0
+        coq-hol-light_version: [dev, 3.0.0] #2.0.0, 1.0.0, 0.0.0
     steps:
       - uses: actions/checkout@v4
       - uses: coq-community/docker-coq-action@v1
