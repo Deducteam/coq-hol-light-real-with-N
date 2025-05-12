@@ -13,7 +13,6 @@ on:
 jobs:
 
   coq--coq-hol-light:
-    # the OS must be GNU/Linux to be able to use the docker-coq-action
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -28,8 +27,7 @@ jobs:
           coq_version: ${{ matrix.coq_version }}
           after_script: opam install -y coq-hol-light.${{ matrix.coq-hol-light_version }}
 
-  coq--coq-hol-light.dev:
-    # the OS must be GNU/Linux to be able to use the docker-coq-action
+  coq--coq-hol-light-dev:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
