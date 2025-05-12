@@ -40,7 +40,8 @@ jobs:
           opam_file: 'coq-hol-light-real-with-N.opam'
           coq_version: ${{ matrix.coq_version }}
           after_script: |
-            git config --global --add safe.directory /github/workspace
+            mkdir tmp
+            cd tmp
             git checkout git@github.com:Deducteam/coq-hol-light.git
             cd coq-hol-light
             opam install -y .
