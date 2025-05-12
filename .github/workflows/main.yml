@@ -42,10 +42,11 @@ jobs:
       - uses: actions/checkout@v4
       - run: |
           export OPAMROOT="$opamroot"
+          ls
           opam install -y .
           mkdir tmp
           cd tmp
-          git checkout git@github.com:Deducteam/coq-hol-light.git
+          git checkout https://github.com/Deducteam/coq-hol-light.git
           cd coq-hol-light
           opam install -y .
 
@@ -55,6 +56,8 @@ jobs:
       fail-fast: false
       matrix:
         coq_version: [dev, '9.0']
+    env:
+      opamroot: /home/rocq/.opam
     container:
       image: rocq/rocq-prover:${{ matrix.coq_version }}
       options: --user root
@@ -62,9 +65,10 @@ jobs:
       - uses: actions/checkout@v4
       - run: |
           export OPAMROOT="$opamroot"
+          ls
           opam install -y .
           mkdir tmp
           cd tmp
-          git checkout git@github.com:Deducteam/coq-hol-light.git
+          git checkout https://github.com/Deducteam/coq-hol-light.git
           cd coq-hol-light
           opam install -y .
