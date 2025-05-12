@@ -40,10 +40,13 @@ jobs:
       options: --user root
     steps:
       - uses: actions/checkout@v4
-      - run: opam install -y .
+      - run: |
+          export OPAMROOT="$opamroot"
+          opam install -y .
       - run: |
           git checkout https://github.com/Deducteam/coq-hol-light.git
           cd coq-hol-light
+          export OPAMROOT="$opamroot"
           opam install -y .
 
   rocq--coq-hol-light-dev:
@@ -59,8 +62,11 @@ jobs:
       options: --user root
     steps:
       - uses: actions/checkout@v4
-      - run: opam install -y .
+      - run: |
+          export OPAMROOT="$opamroot"
+          opam install -y .
       - run: |
           git checkout https://github.com/Deducteam/coq-hol-light.git
           cd coq-hol-light
+          export OPAMROOT="$opamroot"
           opam install -y .
