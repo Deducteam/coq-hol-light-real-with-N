@@ -17,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        coq_version: [dev, '8.20', 8.19]
+        coq_version: ['8.20', 8.19]
         coq-hol-light_version: [3.0.0] #2.0.0, 1.0.0, 0.0.0
     steps:
       - uses: actions/checkout@v4
@@ -41,11 +41,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: |
+          pwd
+          echo $opamroot
           export OPAMROOT="$opamroot"
-          ls
+          opam list
           opam install -y .
-          mkdir tmp
-          cd tmp
           git checkout https://github.com/Deducteam/coq-hol-light.git
           cd coq-hol-light
           opam install -y .
@@ -65,10 +65,7 @@ jobs:
       - uses: actions/checkout@v4
       - run: |
           export OPAMROOT="$opamroot"
-          ls
           opam install -y .
-          mkdir tmp
-          cd tmp
           git checkout https://github.com/Deducteam/coq-hol-light.git
           cd coq-hol-light
           opam install -y .
