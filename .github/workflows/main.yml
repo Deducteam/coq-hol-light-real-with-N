@@ -33,12 +33,15 @@ jobs:
       fail-fast: false
       matrix:
         coq_version: ['8.20', 8.19]
+    env:
+      opamroot: /home/coq/.opam
     container:
       image: coqorg/coq:${{ matrix.coq_version }}
       options: --user root
     steps:
       - uses: actions/checkout@v4
       - run: |
+          export OPAMROOT="$opamroot"
           opam install -y .
           mkdir tmp
           cd tmp
@@ -58,6 +61,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: |
+          export OPAMROOT="$opamroot"
           opam install -y .
           mkdir tmp
           cd tmp
