@@ -25,5 +25,4 @@ jobs:
         with:
           opam_file: 'coq-hol-light-real-with-N.opam'
           coq-version: ${{ matrix.coq-version }}
-      - after_script: |
-          opam install coq-hol-light.${{ matrix.coq-hol-light-version }}
+          after_script: opam install coq-hol-light.${{ matrix.coq-hol-light-version }}
