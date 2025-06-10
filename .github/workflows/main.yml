@@ -12,12 +12,12 @@ on:
 
 jobs:
 
-  coq--coq-hol-light:
+  coq-hol-light:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        coq_version: ['8.20', 8.19]
+        coq_version: [dev, '9.0', '8.20', 8.19]
         coq-hol-light_version: [3.0.0] #2.0.0, 1.0.0, 0.0.0
     steps:
       - uses: actions/checkout@v4
@@ -27,12 +27,12 @@ jobs:
           coq_version: ${{ matrix.coq_version }}
           after_script: opam install -y coq-hol-light.${{ matrix.coq-hol-light_version }}
 
-  coq--coq-hol-light-dev:
+  coq-hol-light-master:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        coq_version: ['8.20', 8.19]
+        coq_version: [dev, '9.0', '8.20', 8.19]
     env:
       opamroot: /home/coq/.opam
     container:
@@ -44,28 +44,7 @@ jobs:
           export OPAMROOT="$opamroot"
           opam install -y .
       - run: |
-          git checkout https://github.com/Deducteam/coq-hol-light.git
-          cd coq-hol-light
-          export OPAMROOT="$opamroot"
-          opam install -y .
-
-  rocq--coq-hol-light-dev:
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        coq_version: [dev, '9.0']
-    env:
-      opamroot: /home/rocq/.opam
-    container:
-      image: rocq/rocq-prover:${{ matrix.coq_version }}
-      options: --user root
-    steps:
-      - uses: actions/checkout@v4
-      - run: |
-          export OPAMROOT="$opamroot"
-          opam install -y .
-      - run: |
+          cd /tmp
           git checkout https://github.com/Deducteam/coq-hol-light.git
           cd coq-hol-light
           export OPAMROOT="$opamroot"
