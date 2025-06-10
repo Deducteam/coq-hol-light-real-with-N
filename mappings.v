@@ -3068,3 +3068,5 @@ Lemma axiom_24 : forall (r : (prod hreal hreal) -> Prop), ((fun s : (prod hreal 
 Proof. exact (dest_mk_quotient treal_eq). Qed.
 
 End HL.
+
+Close Scope N_scope.
