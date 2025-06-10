@@ -44,6 +44,9 @@ jobs:
           export OPAMROOT="$opamroot"
           opam install -y .
       - run: |
+          pwd
+          ls
+          ls /
           cd /tmp
           git checkout https://github.com/Deducteam/coq-hol-light.git
           cd coq-hol-light
