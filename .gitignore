@@ -7,3 +7,4 @@ rocq.mk.conf
 .lia.cache
 .nia.cache
 .rocq.mk.d
+.filestoinstall

@@ -1,0 +1,41 @@
+# following https://github.com/coq-community/docker-coq-action
+
+name: CI
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    paths-ignore:
+      - '*.v'
+      - 'Makefile'
+  workflow_dispatch:
+
+jobs:
+  build:
+    # the OS must be GNU/Linux to be able to use the docker-coq-action
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        coq_version: [dev, '9.0']
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v4
+      - name: setting up opam
+        uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: 5.3
+      - name: install dependencies
+        run: |
+          #opam update
+          #opam upgrade
+          opam pin add -n -k path coq-hol-light-real-with-N .
+          opam install --deps-only -d -t coq-hol-light-real-with-N
+      - name: build
+        run: |
+          eval $(opam env)
+          make
+      - name: install
+        run: |
+          eval $(opam env)
+          make install
