@@ -1,5 +1,5 @@
 (****************************************************************************)
-(* Coq theory for encoding HOL-Light proofs. *)
+(* Coq theory for encoding HOL Light proofs. *)
 (****************************************************************************)
 
 Lemma ext_fun {A B} {f g : A -> B} : f = g -> forall x, f x = g x.
@@ -9,7 +9,7 @@ Lemma eq_false_negb_true b : b = false -> negb b = true.
 Proof. intro e. subst. reflexivity. Qed.
 
 (****************************************************************************)
-(* Type of non-empty types, used to interpret HOL-Light types types. *)
+(* Type of non-empty types, used to interpret HOL Light types types. *)
 (****************************************************************************)
 
 Require Export HOLLight_Real_With_N.type.
@@ -32,7 +32,7 @@ Definition imp (p q : Prop) : Prop := p -> q.
 Definition ex1 : forall {A : Type'}, (A -> Prop) -> Prop := fun A P => exists! x, P x.
 
 (****************************************************************************)
-(* Proof of some HOL-Light rules. *)
+(* Proof of some HOL Light rules. *)
 (****************************************************************************)
 
 Lemma MK_COMB {a b : Type} {s t : a -> b} {u v : a} (h1 : s = t) (h2 : u = v)
@@ -110,75 +110,6 @@ Definition ε : forall {A : Type'}, (type A -> Prop) -> type A :=
 
 Lemma ε_spec {A : Type'} {P : type A -> Prop} : (exists x, P x) -> P (ε P).
 Proof. intro h. unfold ε. apply epsilon_spec. exact h. Qed.
-
-Lemma align_ε (A : Type') (P : A -> Prop) a : P a -> (forall x, P x -> a = x) -> a = ε P.
-Proof.
-  intros ha hg.
-  apply hg.
-  apply ε_spec.
-  exists a. apply ha.
-Qed.
-
-(* The definition of an HOL-Light function that is recursively defined
-on some inductive type usually looks like:
-
-  [ε (fun g => forall uv, P (g uv)) uv0]
-
-  where P does not depend on uv (unused variable). *)
-
-(* [gobble f uv] replaces the occurrences of [f uv] by a new symbol
-named [f] too and removes [uv] from the context, assuming that [f uv]
-does not actually depends on [uv]. *)
-Ltac gobble f uv :=
-  let g := fresh in
-  set (g := f uv) in * ;
-  clearbody g ; clear f uv ;
-  rename g into f.
-
-(* From a goal of the form [a = ε (fun a' => forall uv, P (a' uv)) uv0],
-align_ε' generates two subgoals [P a] and [forall x, P a -> P x -> a = x]. *)
-Ltac align_ε' :=
-  let rec aux :=
-    lazymatch goal with
-    | |- _ ?x = ε _ ?x => apply (f_equal (fun f => f x)) ; aux
-    | |- ?a = ε _ ?r =>
-        (* Replace the goal by (fun _ => a = ε ?P) *)
-        apply (f_equal (fun g => g r) (x := fun _ => a)) ;
-        aux ;
-        [ let uv := fresh in
-          intro uv ; clear uv 
-
-        | let a' := fresh in
-          let uv := fresh in
-          let H' := fresh in
-          let H := fresh in
-          intros a' H H' ; ext uv ;
-          specialize (H uv) ; (* As [P] starts with [forall uv] *)
-          specialize (H' uv) ;
-          simpl ((fun _ => a) uv) in * ; (* Simplifies to [a] so that [uv] only appears in [a' uv] *)
-          gobble a' uv ;
-          revert a' H H' (* Revert [a'], [P a] and [P a'] to reuse them in other tactics *)
-        ]
-    | |- ?a = ε ?P => let H := fresh in
-         assert (H : P a); (* We assume that [a] satisfies [P] *)
-         [ idtac (* The proof of H is left to the user *)
-         | apply align_ε ; (* Replaces the goal [a = ε P] with two goals [P a] and
-                           [forall x, P x => x = a]. *)
-          [ exact H
-            | let a' := fresh in 
-              intro a'; revert a' H]]
-    end
-  in aux.
-
-(* [align_ε] is the same as [align_ε'] except that, in the 2nd
-generated subgoal, the assumption [P a] is moved to the context. *)
-Ltac align_ε :=
-  align_ε' ;
-  [ idtac
-  | let x := fresh in
-    let H := fresh "H" in
-    intros x H ;
-    revert x ].
 
 Axiom prop_ext : forall {P Q : Prop}, (P -> Q) -> (Q -> P) -> P = Q.
 
@@ -333,6 +264,69 @@ Notation "'ifp' P 'then' x 'else' y" := (COND P x y) (at level 200).
 Lemma COND_def {A : Type'} : (@COND A) = (fun t : Prop => fun t1 : A => fun t2 : A => @ε A (fun x : A => ((t = True) -> x = t1) /\ ((t = False) -> x = t2))).
 Proof. ext P x y. now rewrite is_True, is_False. Qed.
 
+(****************************************************************************)
+(* Alignment automation tactics. *)
+(****************************************************************************)
+
+(****************************************************************************)
+(* For the ε operator *)
+(****************************************************************************)
+
+Lemma align_ε (A : Type') (P : A -> Prop) a : P a -> (forall x, P a -> P x -> a = x) -> a = ε P.
+Proof.
+  intros ha hg.
+  apply hg. exact ha.
+  apply ε_spec.
+  exists a. apply ha.
+Qed.
+
+(* The definition of an HOL Light function that is recursively defined
+on some inductive type usually looks like:
+
+  [ε (fun g => forall uv, P (g uv)) uv0]
+
+  where P does not depend on uv (unused variable). *)
+
+(* [gobble f uv] replaces the occurrences of [f uv] by a new symbol
+named [f] too and removes [uv] from the context, assuming that [f uv]
+does not actually depends on [uv]. *)
+Ltac gobble f uv :=
+  let g := fresh in
+  set (g := f uv) in * ;
+  clearbody g ; clear f uv ;
+  rename g into f.
+
+(* From a goal of the form [a = ε (fun a' => forall uv, P (a' uv)) uv0],
+align_ε' generates two subgoals [P a] and [forall x, P a -> P x -> a = x]. *)
+Ltac align_ε :=
+  lazymatch goal with
+  | |- _ ?x = ε _ ?x => apply (f_equal (fun f => f x)) ; aux
+  | |- ?a = ε _ ?r =>
+      (* Replace the goal by (fun _ => a = ε ?P) *)
+      apply (f_equal (fun g => g r) (x := fun _ => a)) ;
+      align_ε ;
+      [ let uv := fresh in
+        intro uv ; clear uv 
+      | let a' := fresh in
+        let uv := fresh in
+        let H' := fresh in
+        let H := fresh in
+        intros a' H H' ; ext uv ;
+        specialize (H uv) ; (* As [P] starts with [forall uv] *)
+        specialize (H' uv) ;
+        simpl ((fun _ => a) uv) in * ; (* Simplifies to [a] so that [uv] only appears in [a' uv] *)
+        gobble a' uv ;
+        revert a' H H' (* Revert [a'], [P a] and [P a'] to reuse them in other tactics *)
+      ]
+  | |- ?a = ε ?P => 
+       apply align_ε (* Replaces the goal [a = ε P] with two goals [P a] and
+                        [forall x, P a -> P x -> x = a]. *)
+    end.
+
+(****************************************************************************)
+(* For ifp ... then ... else ... *)
+(****************************************************************************)
+
 (* The following are useful tools to work with COND :
    - Tactic ifp_triv replaces [ifp P then x else y] in the goal with either x or y
      assuming P or ~P is derivable with easy.
@@ -342,6 +336,7 @@ Proof. ext P x y. now rewrite is_True, is_False. Qed.
    - Lemma ifp_elim destructs hypothesis [ifp P then Q else R]
      as if it were (P /\ Q) \/ (~P /\ R) *)
 
+
 Lemma ifp_True (A : Type') (P : Prop) (x y : A) : P -> (ifp P then x else y) = x.
 Proof.
   intro H.
@@ -349,7 +344,7 @@ Proof.
   unfold COND.
   align_ε.
   - easy.
-  - intros z [ht _].
+  - intros z _ [ht _].
     symmetry.
     apply ht.
     assumption.
@@ -361,7 +356,7 @@ Proof.
   unfold COND.
   align_ε.
   - easy.
-  - intros z [_ hf].
+  - intros z _ [_ hf].
     symmetry.
     apply hf.
     assumption.
@@ -407,10 +402,10 @@ Definition COND_dep (Q: Prop) (C: Type) (f1: Q -> C) (f2: ~Q -> C) : C :=
   end.
 
 (****************************************************************************)
-(* Alignment of partial functions *)
+(* For partial functions *)
 (****************************************************************************)
 
-(* Whenever functions defined in HOL-Light are only defined in some specific cases
+(* Whenever functions defined in HOL Light are only defined in some specific cases
    with ε, it can be defined in Rocq with an ifp, to have a meaningful value
    for these specific cases and default to the default ε-chosen function's
    value elsewhere. For example, functions defined on finite sets.
@@ -458,6 +453,623 @@ Ltac align_ε_ifp :=
   | |- forall x y, COND ?P ?f _ = ε _ x y => apply (align_ε_ifp2 (fun x y => P) (fun x y => f))
   | |- forall x y z, COND ?P ?f _ = ε _ x y z => apply (align_ε_ifp3 (fun x y z => P) (fun x y z => f)) end.
 
+
+(****************************************************************************)
+(* For inductive propositions. *)
+(****************************************************************************)
+
+Ltac breakgoal :=
+  match goal with
+  | |- _ \/ _ => left + right ; breakgoal (* Try both *)
+  | |- exists _,_ => eexists ; breakgoal (* The witness should be obvious *)
+  | |- _ => easy end. (* if easy cannot do the job, it fails to branch back. *)
+
+(* simply decomposing each hypothesis that we might encounter,
+   a lot faster than going brutally with firstorder *)
+Ltac full_destruct := repeat match goal with
+  | H : _ /\ _ |- _ => destruct H
+  | H : exists x, _ |- _ => destruct H
+  | H : _ \/ _ |- _ => destruct H end.
+
+Ltac blindrewrite := repeat match goal with H : _ |- _ => rewrite H end.
+
+(* In HOL_Light, an inductive defintion is top-down :
+   if [Case_i x1 ... xn : Hyps_i x1 ... xn -> P (f_i x1 ... xn)] for 1 <= i <= k
+   are the constructors / rules of P, then :
+   [P x = forall P', (forall x', Case_1' x' \/ ... \/ Case_k' x' -> P' x') -> P' x]
+   where [Case_i' x' := exists x1 ... xn, f_i x1 ... xn = x' /\ Hyps_i x1 ... xn]
+
+   Let P_h x := Forall P', H' -> P' x' denote the HOL_Light definition of P
+   and P_r the Rocq Inductive definition.
+   *)
+Ltac ind_align :=
+  let x := fresh "x" in
+  let y := fresh "y" in
+  let z := fresh "z" in
+  let H := fresh in
+  try ext x ; try ext y ; try ext z ; apply prop_ext ; intro H ;
+  (* Prove equality by double implication *)
+  [ let P' := fresh "P'" in
+    let H' := fresh "H'" in (* Proving [P_r x -> P_h x] *)
+    intros P' H' ; induction H ; apply H' ;
+    (* Induction on hypothesis [P_r x] replaces [x] according to Case_i for each i.
+       to prove [P' x] we apply [H']. *)
+    try breakgoal (* Trying to automatically find and solve Case_i'.
+                     The Hyps_i are in the context. *)
+  | (* Proving [P_h x -> P_r x] *)
+    apply H ; (* Replaces goal [P_r x] with [H'] *)
+    clear H ; try clear x ; try clear y ; try clear z ; (* H' talks about fresh variables *)
+    try intros x y z H ; try intros x y H ; try intros x H ;
+    full_destruct ; (* Destructing H results in one goal per case, and separates the hypotheses *)
+    blindrewrite ; (* not much to do, each clause should be proved with a rule,
+                      we just try to rewrite [a = f x1 ... xn] if it exists *)
+    try now (constructor ; auto) ].
+
+(*****************************************************************************)
+(* For function inverses *)
+(*****************************************************************************)
+
+Definition finv [A B : Type'] (f : A -> B) : B -> A := fun y => ε (fun x => f x = y).
+
+(* finv can define the inverse of a type embedding, the following will be useful to
+   prove isomorphisms *)
+
+Lemma finv_inv_l [A B : Type'] (f : A -> B) (x : A) :
+  (forall x0 x1 : A, f x0 = f x1 -> x0 = x1) -> finv f (f x) = x.
+Proof.
+  intro H. apply H. apply (ε_spec (P := fun x' => f x' = f x)). now exists x. 
+Qed.
+
+(* Tactic to clear variables not appearing anywhere, including hypotheses. *)
+
+Ltac clearall := repeat match goal with useless : _ |- _ => clear useless end.
+
+Ltac finv_inv_l := intros ; apply finv_inv_l ; clearall.
+
+Lemma finv_inv_r [A B : Type'] (f : A -> B) : forall (P : B -> Prop) (y : B), 
+  (P y -> exists x, f x = y) -> ((exists x, f x = y) -> P y) -> P y = (f (finv f y) = y).
+Proof.
+  intros P y i1 i2. transitivity (exists x, f x = y).
+  - exact (prop_ext i1 i2).
+  - apply prop_ext;intro H.
+    + exact (ε_spec H).
+    + now exists (finv f y).
+Qed.
+
+(*****************************************************************************)
+(* For inductive types *)
+(*****************************************************************************)
+
+Require Import Stdlib.NArith.BinNat.
+
+Definition NUMERAL (x : N) := x.
+
+Definition BIT0 := N.double.
+
+Definition BIT1 := fun n : N => N.succ (BIT0 n).
+
+Ltac numfold := unfold NUMERAL, BIT1, BIT0 in *.
+Ltac numsimp := numfold ; simpl.
+
+Definition FCONS {A : Type} (a : A) (f: N -> A) (n : N) : A :=
+  N.recursion a (fun n _ => f n) n.
+
+Lemma recursion_succ A (a:A) f n :
+  N.recursion a f (N.succ n) = f n (N.recursion a f n).
+Proof.
+  apply N.recursion_succ. reflexivity.
+  intros n1 n2 n12 a1 a2 a12. subst n2. subst a2. reflexivity.
+Qed.
+
+Lemma FCONS_inj [A : Type'] (a a' : A) f f' : (FCONS a f = FCONS a' f') = (a = a' /\ f = f').
+Proof.
+  apply prop_ext;intro H. split. 
+  - exact (ext_fun H N0).
+  - ext n. generalize (ext_fun H (N.succ n)). unfold FCONS.
+    now do 2 rewrite recursion_succ.
+  - destruct H as (Ha , Hf). apply fun_ext. apply N.peano_ind.
+    + exact Ha.
+    + intros n IHn. unfold FCONS. do 2 rewrite recursion_succ. now rewrite Hf.
+Qed.
+
+(* In this section, we suppose that we wish to align a HOL_Light inductive definition to a
+   Rocq one. In simple cases (Same ammount of constructors with same arguments,
+   Rocq generates the correct inductive principle, currently no mutually defined types
+   (check coq-hol-light-Logic for an example of alignment of 2 mutually defined types)), the following 
+   tactics allow to fully automate the proofs. *)
+
+(* Let this also serve as a tutorial on how to map a HOL Light type T in general.
+
+   - Once file.ml has been translated with hol2dk,
+     search for "Axiom" in file_terms.v. You should find axioms,
+     usually named _mk_T and _dest_T, with type recspace A -> T and
+     T -> recspace A respectively for some A.
+
+   - In the mappings file, first define the correct Rocq inductive type if it does not exist,
+     then define _dest_T yourself recursively.
+     > To know how you should define it, look at the definitions after axioms _mk_T and _dest_t
+       in T_terms.v. They should look like :
+       "Definition _123456 := fun (...) => _mk_T [...]" where _123456 (for example) is simply a temporary name
+       for a constructor C, replaced soon after with "Definition C := _123456".
+       [_dest_T (C (...))] should then have value [...].
+
+    - You can then define _mk_t := finv _dest_t.
+
+    - Then, in file_types.v, you should find two axioms named axiom_... stating
+      that _dest_T and _mk_t are the inverse of each other. Prove them in the mappings file using the following
+      tactics :
+      *)
+
+(* _dest_inj proves that _dest is injective by double induction.
+   Can fail when the induction principle isn't suited.
+   Only works for non mutually defined types. *)
+
+Ltac _dest_inj_inductive :=
+  match goal with |- forall x x', _ => let e := fresh in
+    induction x ; induction x' ; simpl ; intro e ;
+    (* e is of the form "CONSTR n a f = CONSTR n' a' f'", so inversion
+       gives hypotheses n=n' , a=a' and f=f'. *)
+    inversion e ; auto ;
+    repeat rewrite FCONS_inj in * ; (* f and f' should represent lists of recursive calls
+                                       so we transform their equality into equality of
+                                       each recursive call (so of the form
+                                       "et : _dest_T t = _dest_T t'") *)
+    f_equal ;
+    match goal with IH : _ |- _ => now apply IH (* trying to apply the
+                                                   induction hypothesis blindly to prove 
+                                                   t = t' from et *)
+    end end.
+
+(* As long as _mk_T is defined as finv _dest_T, _mk_dest_inductive will
+   transform a goal of the form [forall x, (_mk_T (_dest_T x)) = x] into
+   a goal stating injectivity of _dest_T thanks to finv_inv_l, then try to apply _dest_inj. *)
+
+Ltac _mk_dest_inductive := finv_inv_l ; try _dest_inj_inductive.
+
+(* Try to solve a goal of the form [forall r, P r = (_dest_T (_mk_T r)) = r)]
+   for P defining the subset of recspace A with which the defined type(s) are
+   isomorphism.
+   Thanks to finv_inv_r, the goal can be replaced by [P r <-> exists x, _dest_T x = r]
+   as long as _mk_T is defined as finv _dest_T.
+
+   P is an inductive definition so the following is very similar to ind_align,
+   except that [exists x, _dest_T x = r] is not inductive so we are rather inducting on x.
+   Compared to ind_align, we do not have access to the constructor tactic to automatically
+   find the correct constructor so it currently needs to be done by hand. *)
+
+Ltac _dest_mk_inductive :=
+  let H := fresh in 
+  let x := fresh "x" in 
+  apply finv_inv_r ;
+  [ intro H ; apply H ;
+    clear H ; intros x H ;
+    full_destruct ; rewrite H ;
+    clear H ; simpl in *
+  | let x := fresh "x" in
+    (* simply inducting over [x] such that [_dest_ x = r]. *)
+    intros (x,<-) ;
+    induction x ; let P := fresh in
+    let H' := fresh in
+    intros P H' ; apply H' ; try breakgoal ].
+
+(* - Finally, prove the definition of all constructors ( the lemmas _123456_def and C_def
+     right under their definition in T_terms.v, replacing them with the new definition ).
+     constr_align automatically proves _123456_def (afterwards, C_def is just reflexivity) : *)
+
+Ltac fresh_ext := let x := fresh "x" in ext x.
+Ltac constr_align H := (* Takes as argument the lemma [forall x, _mk_T (_dest_T x) = x].
+                          Requires explicit type arguments. *)
+
+  repeat fresh_ext ; match goal with |- ?x = _ => apply (eq_sym (H x)) end.
+
+
+(*****************************************************************************)
+(* For Record-like types *)
+(*****************************************************************************)
+
+(* Record-like types in HOL Light are simply subtypes of the form
+   {x : T1 * T2 * ... * Tn | (P1 /\ P2 /\ ... /\ Pn') x}
+   where the Pi and Ti are the Prop and non-Prop fields respectively. *)
+
+(* The goal of this section is to automate the alignment of this type
+   with the corresponding record in Rocq. *)
+
+(* Note that the Ti cannot depend on each other, since HOL Light cannot define
+   dependant pairs. *)
+
+(* let r be an element of the record Type, _dest_T r should simply be the tuple
+   of all non-Prop fields of r. We made the choice that _mk_T should be finv _dest_T
+   but here other options were available compared to inductive types. *)
+
+(* typecheck T x fails if x is not of type T, does nothing otherwise. *)
+Ltac typecheck T x := assert_succeeds let y:=fresh in set (y := x : T).
+
+(* Revert everything that H does not depend on.
+   ( actually also keeps everything that has the same type as H,
+     H is supposed to be a proposition ) *)
+Ltac revert_keep H :=
+  match type of H with ?T =>
+    repeat match goal with
+    | x : _ |- _ => assert_fails typecheck T x ; revert x end end.
+
+Require Import Stdlib.Logic.ProofIrrelevance.
+
+(* Apply proof_irrelevance to all propositionnal fields,
+   to prove injectivity of _dest_T. *)
+
+(* To do that we first need to rewrite equalities to remove the difference in
+   dependant typing of the fields. *)
+
+Ltac instance_uniqueness := let instance1 := fresh in
+  let instance2 := fresh in
+  let eq := fresh in
+  intros instance1 instance2 eq ;
+  match type of eq with
+  | ?f _ = _ => unfold f in eq
+  | ?f _ _ = _ => unfold f in eq
+  | ?f _ _ _ = _ => unfold f in eq
+  | ?f _ _ _ _ = _ => unfold f in eq end ;
+  destruct instance1,instance2 ; simpl in eq ;
+  revert_keep eq ; inversion_clear eq ;
+  intros ; f_equal ; apply proof_irrelevance.
+
+(* Combine it with finv_inv_l. *)
+
+Ltac _mk_dest_record := finv_inv_l ; instance_uniqueness.
+
+(* tries proving [H1 /\ ... /\ Hn -> P] with hypothesis [H1 -> ... -> Hn -> P]
+   or the converse. *)
+
+Ltac and_arrow := hnf ; intros ; try match goal with H : _ |- _ => now apply H end.
+
+(* finv_inv_r gives us two goals, we can only fully automate one :
+   [exists r' : T, _dest r' = r -> (P1 /\ P2 /\ ... /\ Pn') r]
+   which is simply done by rewriting the hypothesis, and destructing r'
+   to get its fields which should contain the required proof.  *)
+
+Ltac _dest_mk_record :=
+  intros ; apply finv_inv_r ;
+  [ try match goal with
+    | |- ?P _ -> _ => unfold P
+    | |- ?P _ _ -> _ => unfold P
+    | |- ?P _ _ _ -> _ => unfold P
+    | |- ?P _ _ _ _ -> _ => unfold P end ;
+    intros ; full_destruct
+  | try match goal with
+    | |- (exists _, ?f _ = _) -> _ => unfold f
+    | |- (exists _, ?f _ _ = _) -> _ => unfold f
+    | |- (exists _, ?f _ _ _ = _) -> _ => unfold f
+    | |- (exists _, ?f _ _ _ _  = _) -> _ => unfold f end ; 
+    let r := fresh in
+    intros [r <-] ; clearall ; destruct r ;
+    repeat (and_arrow ; split) ; and_arrow ; simpl ].
+
+(* The other goal is the opposite direction,
+   for which it is required to provide an instance of the Rocq record,
+   which is sadly not automatable with Rocq alone.
+   The following tactic automates everything but require as input
+   a uconstr of the form {| F1 := fst r ; ... ; Fn := snd (... (snd r)) |},
+   explicitly giving all non-Prop fields.  *)
+
+Ltac destruct_tuple r := let b := fresh in
+  destruct r as (?a,b) ; try destruct_tuple b.
+
+Tactic Notation "record_exists" uconstr(uwitness) :=
+  unshelve eexists uwitness ;
+  and_arrow ;
+  try match goal with |- _ = ?r => now try destruct_tuple r end.
+
+(* In case the Prop fields are not the same as the HOL_Light ones,
+   we will be left with proving their double implication. *)
+
+(****************************************************************************)
+(* For total recursive functions *)
+(****************************************************************************)
+
+(* Tries to prove a goal [f = ε P uv] where f is recursively defined. *)
+Ltac total_align1 :=
+  align_ε ; (* At this state, we have two goals : [P f] and [P f -> P f' -> f = f'].
+                We now assume that [P f] is of the form
+                [Q1 f C1 = ... /\ Q2 f C2 = ... /\ ... /\ Qn f Cn = ...]
+                where the Ci are the constructors of the type and
+                the Qi are universal quantifications over other arguments and subterms of the Ci. *)
+  [ repeat split ; intros ; auto 
+  | let f' := fresh in
+    let r := fresh in
+    let a := fresh in
+    let b := fresh in
+    let c := fresh in
+    let d := fresh in
+    let H := fresh in
+    let H' := fresh in
+    intros f' H H' ; ext r ; induction r ; 
+    try ext a; try ext b ; try ext c ; try ext d ;
+    try full_destruct ; (* with the correct induction principle, we have one case per clause,
+                           we can replace [f] and [f']'s values with the corresponding
+                           clause in [P] (that we have split).
+                           By also rewriting all induction hypotheses,
+                           the goal should become a reflexive equality.
+
+                           For more complex types, it is possible to try and adapt this tactic
+                           to specify how the induction hypothesis should be used.
+                           See term_align in coq-hol-light-Logic1 for an example 
+                           with lists as recursive arguments *)
+    repeat match goal with
+    H : _ |- _ => rewrite H end ;
+    auto (* reflexivity would be more ideal but sometimes rewriting the induction hypothesis fails
+            because the recursive call is dependant on something else, for example something quantified. *)
+    ].
+
+(* The following only change which argument induction is applied on. *)
+
+Ltac total_align2 :=
+  align_ε ; [ repeat split ; intros ; auto
+  | let f' := fresh in
+    let r := fresh in
+    let a := fresh in
+    let b := fresh in
+    let c := fresh in
+    let d := fresh in
+    let H := fresh in
+    let H' := fresh in
+    intros f' H H' ; ext a r ;
+    revert a ; induction r ; intro a ; try ext b ;
+    try ext c ; try ext d ;
+    try full_destruct ; repeat match goal with
+    H : ?P |- _ => rewrite H end ; auto ].
+
+Ltac total_align3 :=
+  align_ε ; [ repeat split ; intros ; auto
+  | let f' := fresh in
+    let r := fresh in
+    let a := fresh in
+    let b := fresh in
+    let c := fresh in
+    let d := fresh in
+    let H := fresh in
+    let H' := fresh in
+    intros f' H H' ; ext a b r ;
+    revert a b ; induction r ; intros a b ;
+    try ext c ; try ext d ;
+    try full_destruct ; repeat match goal with
+    H : _ |- _ => rewrite H end ; auto ].
+
+Ltac total_align4 :=
+  align_ε ; [ repeat split ; intros ; auto
+  | let f' := fresh in
+    let r := fresh in
+    let a := fresh in
+    let b := fresh in
+    let c := fresh in
+    let d := fresh in
+    let H := fresh in
+    let H' := fresh in
+    intros f' H H' ; ext a b c ; ext r ;
+    revert a b c ; induction r ; intros a b c ;
+    try ext d ; try full_destruct ;
+    repeat match goal with
+    H : _ |- _ => rewrite H end ; auto ].
+
+Ltac total_align5 :=
+  align_ε ; [ repeat split ; intros ; auto
+  | let f' := fresh in
+    let r := fresh in
+    let a := fresh in
+    let b := fresh in
+    let c := fresh in
+    let d := fresh in
+    let H := fresh in
+    let H' := fresh in
+    intros f' H H' ; ext a b c ; ext d r ;
+    revert a b c d ; induction r ; intros a b c d ;
+    try full_destruct ; repeat match goal with
+    H : _ |- _ => rewrite H ; clear H end ; auto ].
+
+Ltac total_align :=
+  first
+  [ total_align1
+  | total_align2
+  | total_align3
+  | total_align4
+  | total_align5 ].
+
+(****************************************************************************)
+(* Variant on N. *)
+(****************************************************************************)
+
+(* N_rec_alignk for k between 1 and 3 replaces a goal of the form 
+     f = ε P uv with two goals PO f and PS f whenever P = PO /\ PS
+   totally defines the function by peano recursion on the kth argument. *)
+(* These tactics only work for functions with 3 or less arguments. *)
+
+Ltac N_rec_align1 :=
+  align_ε ; (* At this state, we have two goals : P f and P f -> P f' -> f = f'.
+                We now assume that P is of the form
+                g 0 = x /\ forall n, g (Succ n) = y for some x and y. *)
+  [ split ; auto (* since it is a conjunction, we can split *)
+  | let f' := fresh in
+    let n := fresh in
+    let a := fresh in
+    let b := fresh in
+    let HO := fresh in
+    let HS := fresh in
+    let HO' := fresh in
+    let HS' := fresh in
+    let IHn := fresh in
+    intros f' (HO , HS) (HO' , HS') ; (* Naming specifically each clause in H and H'. *)
+    ext n ; match goal with |- ?f n = f' n => 
+      revert n ; apply (N.peano_rec (fun n => (f n = f' n))) ; try intros n IHn ;
+      try ext a ; try ext b ; [
+        rewrite HO ; rewrite HO' (* f 0 and f' 0 are replaced with the same value. This ensures that we are inducting on the correct variable otherwise rewriting would fail. *)
+      | rewrite HS ; rewrite HS' ; try rewrite <- IHn (* Same as above. *)
+      ] ; auto end
+        ] .
+  (* If all works correctly we have two goals left, PO f and PS f.
+     PO f is often already solved, and in easy cases, so is PS f. *) 
+
+(* N_rec_align2 and N_rec_align3 are very similar. *)
+
+Ltac N_rec_align2 :=
+  align_ε ; [ split ; auto
+  | let f' := fresh in
+    let n := fresh in
+    let a := fresh in
+    let b := fresh in
+    let HO := fresh in
+    let HS := fresh in
+    let HO' := fresh in
+    let HS' := fresh in
+    let IHn := fresh in
+    intros f' (HO , HS) (HO' , HS') ; ext a n ; simpl in n ;
+    match goal with |- ?f a n = f' a n =>  
+      revert n a ; apply (N.peano_rec (fun n => forall a, f a n = f' a n)) ; [ 
+        intro a ; try ext b ; rewrite HO ; rewrite HO' 
+      | intros n IHn a ; try ext b ; 
+        rewrite HS ; rewrite HS' ; try rewrite <- IHn ] ; auto end
+        ] .
+
+Ltac N_rec_align3 :=
+  align_ε ; [ split ; auto
+  | let f' := fresh in
+    let n := fresh in
+    let a := fresh in
+    let b := fresh in
+    let HO := fresh in
+    let HS := fresh in
+    let HO' := fresh in
+    let HS' := fresh in
+    let IHn := fresh in
+    intros f' (HO , HS) (HO' , HS') ; ext a b n ; simpl in n ;
+    match goal with |- ?f a b n = f' a b n =>
+      revert n a b ; apply (N.peano_rec (fun n => forall a b, f a b n = f' a b n)) ; [
+        intros a b ; rewrite HO ; rewrite HO'
+      | intros n IHn a b ; rewrite HS ; rewrite HS' ; try rewrite <- IHn ] ; auto end
+        ].
+
+Ltac N_rec_align :=
+  first
+  [ N_rec_align1
+  | N_rec_align2
+  | N_rec_align3 ].
+
+(****************************************************************************)
+(* For partial recursive functions. *)
+(****************************************************************************)
+
+(* It is possible in HOL_Light to define a function
+   recursively while not defining it for some constructors.
+   The function will then have its value on these constructors chosen
+   by the ε operator. In that case it is necessary to define the rocq function
+   to be trivially equal to the HOL Light one on each of these constructors.
+
+   The following tactics allow to align such a partially defined function
+   when provided with a predicate Q representing the cases where equality has to
+   be trivial.
+
+   Q should be defined inductively so as to be able to automatically discharge
+   the goal [Q x -> _=_] via inversion. *)
+
+(* First, the following lemmas mimick align_ε in the case where equality has to
+   be trivial on Q. They can be used for any partial function, not just recursive
+   (for example, a function defined through "new_specification") *)
+
+Lemma partial_align_case1 {U A B : Type'} {uv0 : U} {x : A}
+  (Q : A -> Prop) (f : U -> A -> B) (P : (U -> A -> B) -> Prop) :
+  P f -> (forall x', Q x' -> f uv0 x' = ε P uv0 x') ->
+  (forall f' uv x', P f ->  P f' -> (forall x'', Q x'' -> f uv x'' = f' uv x'') ->
+  f uv x' = f' uv x') -> f uv0 x = ε P uv0 x.
+Proof.
+  intros Hf Htriv Hunique.
+  apply Hunique;auto. apply ε_spec. now exists f.
+Qed.
+
+Lemma partial_align_case2 {U A B C : Type'} {uv0 : U} {x : B} {y : A}
+  (Q : A -> Prop) (f : U -> B -> A -> C) (P : (U -> B -> A -> C) -> Prop) :
+  P f -> (forall x' y', Q y' -> f uv0 x' y' = ε P uv0 x' y') ->
+  (forall f' uv x' y', P f ->  P f' ->
+  (forall x'' y'', Q y'' -> f uv x'' y'' = f' uv x'' y'') ->
+  f uv x' y' = f' uv x' y') -> f uv0 x y = ε P uv0 x y.
+Proof.
+  intros Hf Htriv Hunique.
+  apply Hunique;auto. apply ε_spec. now exists f.
+Qed.
+
+Lemma partial_align_case3 {U A B C D : Type'} {uv0 : U} {x : B} {y : C} {z : A}
+  (Q : A -> Prop) (f : U -> B -> C -> A -> D) (P : (U -> B -> C -> A -> D) -> Prop) :
+  P f -> (forall x' y' z', Q z' -> f uv0 x' y' z' = ε P uv0 x' y' z') ->
+  (forall f' uv x' y' z', P f ->  P f' ->
+  (forall x'' y'' z'', Q z'' -> f uv x'' y'' z'' = f' uv x'' y'' z'') ->
+  f uv x' y' z' = f' uv x' y' z') -> f uv0 x y z = ε P uv0 x y z.
+Proof.
+  intros Hf Htriv Hunique.
+  apply Hunique;auto. apply ε_spec. now exists f.
+Qed.
+
+(* The following ressembles total_align but also tries to automatically get rid of every cases that
+   are in Q. It is designed for recursive functions only. *)
+Ltac partial_align1 Q :=
+  let f' := fresh "f'" in 
+  let uv := fresh "uv" in
+  let H := fresh in
+  let H' := fresh "H'" in
+  let Htriv := fresh "Htriv" in
+  match goal with
+  |- ?f ?x = ε _ _ ?x => apply (partial_align_case1 Q (fun _ => f)) ; (* replace f with (fun _ => f) uv *)
+    clear x ; [repeat split ; auto
+    | intro x ; now inversion 1 (* Additional goal [forall x, Q x -> f uv x = ε uv x]
+                                       compared to total_align, if Q is inductive and the
+                                       equality is trivial, inversion should do the job. *)
+    | let y := fresh "y" in
+      let z := fresh "z" in
+      intros f' uv x H H' Htriv ; try ext y ; try ext z ;
+      specialize (H uv) ; specialize (H' uv) ;
+      induction x ; try (now apply Htriv ; try constructor ; auto) ; (* automatically takes care of cases
+                                                                        in Q. *)
+      clear Htriv ; (* We do not want to be able to rewrite Htriv outside of cases in Q. *)
+      try full_destruct ;
+      repeat match goal with H : _ |- _ => rewrite H end ; auto ] end.
+
+Ltac partial_align2 Q :=
+  let f' := fresh "f'" in 
+  let uv := fresh "uv" in
+  let H := fresh in
+  let H' := fresh "H'" in
+  let Htriv := fresh "Htriv" in
+  match goal with
+  |- ?f ?y ?x = ε _ _ ?y ?x => apply (partial_align_case2 Q (fun _ => f)) ;
+    clear y x ; [repeat split ; auto
+    | intros y x ; now inversion 1
+    | let z := fresh "z" in
+      intros f' uv y x H H' Htriv ; try ext z ;
+      specialize (H uv) ; specialize (H' uv) ;
+      induction x ; try (now apply Htriv ; try constructor ; auto) ;
+      clear Htriv ; try full_destruct ;
+      repeat match goal with H : _ |- _ => rewrite H end ; auto ] end.
+
+Ltac partial_align3 Q :=
+  let f' := fresh "f'" in 
+  let uv := fresh "uv" in
+  let H := fresh in
+  let H' := fresh "H'" in
+  let Htriv := fresh "Htriv" in
+  match goal with
+  |- ?f ?y ?z ?x = ε _ _ ?y ?z ?x => apply (partial_align_case3 Q (fun _ => f)) ;
+    clear y z x ; [repeat split ; auto
+    | intros y z x ; now inversion 1
+    | intros f' uv y z x H H' Htriv ;
+      specialize (H uv) ; specialize (H' uv) ;
+      induction x ; try (now apply Htriv ; try constructor ; auto) ;
+      clear Htriv ; try full_destruct ;
+      repeat match goal with H : _ |- _ => rewrite H end ; auto ] end.
+
+Ltac partial_align Q :=
+  let x := fresh "x" in
+  let y := fresh "y" in
+  let z := fresh "z" in
+  ext x ; partial_align1 Q +
+  (ext y ; partial_align2 Q +
+  (ext z ; partial_align3 Q)).
+
 (****************************************************************************)
 (* Miscellaneous. *)
 (****************************************************************************)
@@ -483,7 +1095,7 @@ Lemma ISO_def {A B : Type'} : (@is_inverse A B) = (fun _17569 : A -> B => fun _1
 Proof. ext f g. unfold is_inverse. apply prop_ext; tauto. Qed.
 
 (****************************************************************************)
-(* Proof of HOL-Light axioms. *)
+(* Proof of HOL Light axioms. *)
 (****************************************************************************)
 
 Lemma axiom_0 : forall {A B : Type'}, forall t : A -> B, (fun x : A => t x) = t.
@@ -497,8 +1109,6 @@ Qed.
 (*****************************************************************************)
 (* Alignment of subtypes. *)
 (*****************************************************************************)
-
-Require Import Stdlib.Logic.ProofIrrelevance.
 
 Section Subtype.
 
@@ -787,70 +1397,6 @@ Lemma T_def : True = ((fun p : Prop => p) = (fun p : Prop => p)).
 Proof. apply prop_ext. reflexivity. intros _; exact I. Qed.
 
 (****************************************************************************)
-(* Alignment of inductive propositions. *)
-(****************************************************************************)
-
-Ltac breakgoal :=
-  let rec breakgoal' :=
-    match reverse goal with
-    | |- _ \/ _ => left + right ; breakgoal' (* Try both *)
-    | x : ?T |- exists _ : ?T, _ => (* When the witness is already in the context.
-                                       Doesn't try a witness for multiple quantifers
-                                       by leaving a trace [H : x = x] whenever trying
-                                       [exists x].
-                                       Going from the top down with "reverse goal"
-                                       because they should appear in order. *)
-      match goal with
-      | H : x = x |- _ => fail
-      | _ => let H := fresh in
-        assert (H : x = x) ; try reflexivity ; exists x ; breakgoal' end
-    | |- _ /\ _ => repeat split ; auto ; fail
-         (* if auto cannot do the job, the tactic should fail to branch back.  *)
-    | |- _ => auto ; fail
-    end
-  in breakgoal'.
-
-(* simply decomposing each hypothesis that we might encounter,
-   a lot faster than going brutally with firstorder *)
-Ltac full_destruct := repeat match goal with
-  | H : _ /\ _ |- _ => destruct H
-  | H : exists x, _ |- _ => destruct H
-  | H : _ \/ _ |- _ => destruct H end.
-
-(* In HOL_Light, an inductive defintion is top-down :
-   if [Case_i x1 ... xn : Hyps_i x1 ... xn -> P (f_i x1 ... xn)] for 1 <= i <= k
-   are the constructors / rules of P, then :
-   [P x = forall P', (forall x', Case_1' x' \/ ... \/ Case_k' x' -> P' x') -> P' x]
-   where [Case_i' x' := exists x1 ... xn, f_i x1 ... xn = x' /\ Hyps_i x1 ... xn]
-
-   Let P_h x := Forall P', H' -> P' x' denote the HOL_Light definition of P
-   and P_r the Rocq Inductive definition.
-   *)
-Ltac ind_align :=
-  let x := fresh "x" in
-  let y := fresh "y" in
-  let z := fresh "z" in
-  let H := fresh in
-  try ext x ; try ext y ; try ext z ; apply prop_ext ; intro H ;
-  (* Prove equality by double implication *)
-  [ let P' := fresh "P'" in
-    let H' := fresh "H'" in (* Proving [P_r x -> P_h x] *)
-    intros P' H' ; induction H ; apply H' ;
-    (* Induction on hypothesis [P_r x] replaces [x] according to Case_i for each i.
-       to prove [P' x] we apply [H']. *)
-    try breakgoal (* Trying to automatically find and solve Case_i'.
-                     The Hyps_i are in the context. *)
-  | (* Proving [P_h x -> P_r x] *)
-    apply H ; (* Replaces goal [P_r x] with [H'] *)
-    clear H ; try clear x ; try clear y ; try clear z ; (* H' talks about fresh variables *)
-    try intros x y z H ; try intros x y H ; try intros x H ;
-    full_destruct ; (* Destructing H results in one goal per case, and separates the hypotheses *)
-    repeat match goal with
-    H : _ |- _ => rewrite H (* not much to do, each clause should be proved with a rule,
-                               we just try to rewrite [a = f x1 ... xn] if it exists *)
-    end ; try now (constructor;auto) ].
-
-(****************************************************************************)
 (* Alignment of the unit type. *)
 (****************************************************************************)
 
@@ -902,7 +1448,7 @@ Proof.
   unfold ABS_prod.
   align_ε.
   - reflexivity.
-  - intros [x' y'] h.
+  - intros [x' y'] _ h.
     apply pair_equal_spec.
     exact (mk_pair_inj h).
 Qed.
@@ -922,7 +1468,7 @@ Proof.
   align_ε.
   - exists y.
     reflexivity.
-  - intros x' h.
+  - intros x' _ h.
     destruct h as [y' h].
     rewrite h.
     reflexivity.
@@ -934,7 +1480,7 @@ Proof.
   align_ε.
   - exists x.
     reflexivity.
-  - intros y' h.
+  - intros y' _ h.
     destruct h as [x' h].
     rewrite h.
     reflexivity.
@@ -1061,13 +1607,6 @@ Canonical N'.
 Lemma N0_or_succ n : n = 0 \/ exists p, n = N.succ p.
 Proof. destruct (classic (n = 0)). lia. right. exists (N.pred n). lia. Qed.
 
-Lemma recursion_succ A (a:A) f n :
-  N.recursion a f (N.succ n) = f n (N.recursion a f n).
-Proof.
-  apply N.recursion_succ. reflexivity.
-  intros n1 n2 n12 a1 a2 a12. subst n2. subst a2. reflexivity.
-Qed.
-
 Definition dest_num := N.recursion IND_0 (fun _ r => IND_SUC r).
 
 Lemma dest_num0 : dest_num 0 = IND_0.
@@ -1150,104 +1689,17 @@ Proof.
 Qed.
 
 (****************************************************************************)
-(* tactics to align recursive functions on N. *)
-(****************************************************************************)
-
-(* N_rec_alignk for k between 1 and 3 replaces a goal of the form 
-     f = ε P uv with two goals PO f and PS f whenever P = PO /\ PS
-   totally defines the function by peano recursion on the kth argument. *)
-(* These tactics only work for functions with 3 or less arguments. *)
-
-Ltac N_rec_align1 :=
-  align_ε' ; (* At this state, we have two goals : P f and P f -> P f' -> f = f'.
-                We now assume that P is of the form
-                g 0 = x /\ forall n, g (Succ n) = y for some x and y. *)
-  [ split ; auto (* since it is a conjunction, we can split *)
-  | let f' := fresh in
-    let n := fresh in
-    let a := fresh in
-    let b := fresh in
-    let HO := fresh in
-    let HS := fresh in
-    let HO' := fresh in
-    let HS' := fresh in
-    let IHn := fresh in
-    intros f' (HO , HS) (HO' , HS') ; (* Naming specifically each clause in H and H'. *)
-    ext n ; match goal with |- ?f n = f' n => 
-      revert n ; apply (N.peano_rec (fun n => (f n = f' n))) ; try intros n IHn ;
-      try ext a ; try ext b ; [
-        rewrite HO ; rewrite HO' (* f 0 and f' 0 are replaced with the same value. This ensures that we are inducting on the correct variable otherwise rewriting would fail. *)
-      | rewrite HS ; rewrite HS' ; try rewrite <- IHn (* Same as above. *)
-      ] ; auto end
-        ] .
-  (* If all works correctly we have two goals left, PO f and PS f.
-     PO f is often already solved, and in easy cases, so is PS f. *) 
-
-(* N_rec_align2 and N_rec_align3 are very similar. *)
-
-Ltac N_rec_align2 :=
-  align_ε' ; [ split ; auto
-  | let f' := fresh in
-    let n := fresh in
-    let a := fresh in
-    let b := fresh in
-    let HO := fresh in
-    let HS := fresh in
-    let HO' := fresh in
-    let HS' := fresh in
-    let IHn := fresh in
-    intros f' (HO , HS) (HO' , HS') ; ext a n ; simpl in n ;
-    match goal with |- ?f a n = f' a n =>  
-      revert n a ; apply (N.peano_rec (fun n => forall a, f a n = f' a n)) ; [ 
-        intro a ; try ext b ; rewrite HO ; rewrite HO' 
-      | intros n IHn a ; try ext b ; 
-        rewrite HS ; rewrite HS' ; try rewrite <- IHn ] ; auto end
-        ] .
-
-Ltac N_rec_align3 :=
-  align_ε' ; [ split ; auto
-  | let f' := fresh in
-    let n := fresh in
-    let a := fresh in
-    let b := fresh in
-    let HO := fresh in
-    let HS := fresh in
-    let HO' := fresh in
-    let HS' := fresh in
-    let IHn := fresh in
-    intros f' (HO , HS) (HO' , HS') ; ext a b n ; simpl in n ;
-    match goal with |- ?f a b n = f' a b n =>
-      revert n a b ; apply (N.peano_rec (fun n => forall a b, f a b n = f' a b n)) ; [
-        intros a b ; rewrite HO ; rewrite HO'
-      | intros n IHn a b ; rewrite HS ; rewrite HS' ; try rewrite <- IHn ] ; auto end
-        ].
-
-Ltac N_rec_align :=
-  try N_rec_align1 ;
-  try N_rec_align2 ;
-  try N_rec_align3.
-
-(****************************************************************************)
 (* Alignment of mathematical functions on natural numbers with N. *)
 (****************************************************************************)
 
-Definition NUMERAL (x : N) := x.
-
 Lemma NUMERAL_def : NUMERAL = (fun _2128 : N => _2128).
 Proof. exact (eq_refl NUMERAL). Qed.
-
-Definition BIT0 := N.double.
 
 Lemma BIT0_def : BIT0 = @ε (arr N N') (fun y0 : N -> N => ((y0 (NUMERAL N0)) = (NUMERAL N0)) /\ (forall y1 : N, (y0 (N.succ y1)) = (N.succ (N.succ (y0 y1))))).
 Proof.
   unfold BIT0 , NUMERAL.
   N_rec_align. lia.
 Qed.
-
-Definition BIT1 := fun n : N => N.succ (BIT0 n).
-
-Ltac numfold := unfold NUMERAL, BIT1, BIT0 in *.
-Ltac numsimp := numfold ; simpl.
 
 (* automatically unfold them before lia. *)
 Ltac lia := numfold ; Stdlib.micromega.Lia.lia.
@@ -1378,8 +1830,7 @@ Proof.
       * rewrite N.mul_comm.
         exact (N.Div0.div_mod m n).
       * exact (N.mod_lt m n h).
-  - intros div' h.
-    destruct h as [mod' h].
+  - intros div' _ [mod' h].
     ext x y.
     apply (ifp_elim (h x y)); intros c [d m].
     + rewrite d, c.
@@ -1405,7 +1856,7 @@ Proof.
       * rewrite N.mul_comm.
         exact (N.Div0.div_mod m n).
       * exact (N.mod_lt m n h).
-  - intros mod' h.
+  - intros mod' _ h.
     ext x y.
     apply (ifp_elim (h x y)); intros c [d m].
     + rewrite m, c.
@@ -1706,7 +2157,7 @@ Proof.
     split.
     + exact (NUMLEFT_NUMSUM x y).
     + exact (NUMRIGHT_NUMSUM x y).
-  - intros NUMLEFT' h.
+  - intros NUMLEFT' _ h.
     destruct h as [NUMRIGHT' h].
     ext s.
     destruct (NUMSUM_surjective s) as [b [x k]].
@@ -1721,7 +2172,7 @@ Proof.
   - split.
     + exact (NUMLEFT_NUMSUM x y).
     + exact (NUMRIGHT_NUMSUM x y).
-  - intros NUMRIGHT' h.
+  - intros NUMRIGHT' _ h.
     ext s.
     destruct (NUMSUM_surjective s) as [b [x k]].
     rewrite k, (NUMRIGHT_NUMSUM b x), (proj2 (h b x)).
@@ -1803,7 +2254,7 @@ Proof.
 Qed.*)
 
 (****************************************************************************)
-(* Alignment of recspace, the HOL-Light type used to encode inductive types. *)
+(* Alignment of recspace, the HOL Light type used to encode inductive types. *)
 (****************************************************************************)
 
 (* recspace is basically an inductive type with one constant constructor BOTTOM
@@ -1891,14 +2342,6 @@ Canonical recspace'.
 
 Definition Fnil {A : Type} : N -> recspace A := fun _ => BOTTOM.
 
-Definition FCONS {A : Type} (a : A) (f: N -> A) (n : N) : A :=
-  N.recursion a (fun n _ => f n) n.
-
-Notation "[ ]_rec" := Fnil (format "[ ]_rec").
-Notation "[ x ]_rec" := (FCONS x Fnil).
-Notation "[ x ; y ; .. ; z ]_rec" := (FCONS x (FCONS y .. (FCONS z Fnil) ..))
-  (format "[ '[' x ; '/' y ; '/' .. ; '/' z ']' ]_rec").
-
 Lemma FCONS_def {A : Type'} : @FCONS A = @ε ((prod N (prod N (prod N (prod N N)))) -> A -> (N -> A) -> N -> A) (fun FCONS' : (prod N (prod N (prod N (prod N N)))) -> A -> (N -> A) -> N -> A => forall _17460 : prod N (prod N (prod N (prod N N))), (forall a : A, forall f : N -> A, (FCONS' _17460 a f (NUMERAL N0)) = a) /\ (forall a : A, forall f : N -> A, forall n : N, (FCONS' _17460 a f (N.succ n)) = (f n))) (@pair N (prod N (prod N (prod N N))) (NUMERAL (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) (@pair N (prod N (prod N N)) (NUMERAL (BIT1 (BIT1 (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) (@pair N (prod N N) (NUMERAL (BIT1 (BIT1 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) (@pair N N (NUMERAL (BIT0 (BIT1 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) (NUMERAL (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))))))).
 Proof.
   N_rec_align. intros. unfold FCONS. 
@@ -1906,33 +2349,17 @@ Proof.
   intros n1 n2 -> _ _ _. reflexivity.
 Qed.
 
+Notation "[ ]_rec" := Fnil (format "[ ]_rec").
+Notation "[ x ]_rec" := (FCONS x Fnil).
+Notation "[ x ; y ; .. ; z ]_rec" := (FCONS x (FCONS y .. (FCONS z Fnil) ..))
+  (format "[ '[' x ; '/' y ; '/' .. ; '/' z ']' ]_rec").
+
 Fixpoint _dest_rec {A : Type'} (r : recspace A) : N -> A -> Prop :=
   match r with
   | BOTTOM => ZBOT
   | CONSTR n a f => ZCONSTR n a (fun m => _dest_rec (f m)) end.
 
-Definition finv [A B : Type'] (f : A -> B) : B -> A := fun y => ε (fun x => f x = y).
-
 Definition _mk_rec {A : Type'} : (N -> A -> Prop) -> recspace A := finv _dest_rec.
-
-(* finv can define the inverse of a type embedding, the following will be useful to
-   prove isomorphisms *)
-
-Lemma finv_inv_l [A B : Type'] (f : A -> B) (x : A) :
-  (forall x0 x1 : A, f x0 = f x1 -> x0 = x1) -> finv f (f x) = x.
-Proof.
-  intro H. apply H. apply (ε_spec (P := fun x' => f x' = f x)). now exists x. 
-Qed.
-
-Lemma finv_inv_r [A B : Type'] (f : A -> B) : forall (P : B -> Prop) (y : B), 
-  (P y -> exists x, f x = y) -> ((exists x, f x = y) -> P y) -> P y = (f (finv f y) = y).
-Proof.
-  intros P y i1 i2. transitivity (exists x, f x = y).
-  - exact (prop_ext i1 i2).
-  - apply prop_ext;intro H.
-    + exact (ε_spec H).
-    + now exists (finv f y).
-Qed.
 
 Lemma axiom_10 : forall {A : Type'} (P : N -> A -> Prop), (@ZRECSPACE A P) = ((@_dest_rec A (@_mk_rec A P)) = P).
 Proof.
@@ -2024,336 +2451,6 @@ Proof. symmetry. exact (axiom_9 BOTTOM). Qed.
 Lemma CONSTR_def {A : Type'} : (@CONSTR A) = (fun _17591 : N => fun _17592 : A => fun _17593 : N -> recspace A => @_mk_rec A (@ZCONSTR A _17591 _17592 (fun n : N => @_dest_rec A (_17593 n)))).
 Proof. symmetry. ext n a r. exact (axiom_9 (CONSTR n a r)). Qed.
 
-Lemma FCONS_inj [A : Type'] (a a' : A) f f' : (FCONS a f = FCONS a' f') = (a = a' /\ f = f').
-Proof.
-  apply prop_ext;intro H. split. 
-  - exact (ext_fun H 0).
-  - ext n. generalize (ext_fun H (N.succ n)). unfold FCONS.
-    now do 2 rewrite recursion_succ.
-  - destruct H as (Ha , Hf). apply fun_ext. apply N.peano_ind.
-    + exact Ha.
-    + intros n IHn. unfold FCONS. do 2 rewrite recursion_succ. now rewrite Hf.
-Qed.
-
-(*****************************************************************************)
-(* Tactics to automatize inductive type alignment in most cases. *)
-(*****************************************************************************)
-
-(* In this section, we suppose that we wish to align a HOL_Light inductive definition to a
-   Rocq one. In simple cases (Same ammount of constructors with same arguments,
-   Rocq generates the correct inductive principle, currently no mutually defined types
-   (check coq-hol-light-Logic for an example of alignment of 2 mutually defined types)), the following 
-   tactics allow to fully automatize the proofs. *)
-
-(* Let this also serve as a tutorial on how to map a HOL-Light type T in general.
-
-   - Once file.ml has been translated with hol2dk,
-     search for "Axiom" in file_terms.v. You should find axioms,
-     usually named _mk_T and _dest_T, with type recspace A -> T and
-     T -> recspace A respectively for some A.
-
-   - In the mappings file, first define the correct Rocq inductive type if it does not exist,
-     then define _dest_T yourself recursively.
-     > To know how you should define it, look at the definitions after axioms _mk_T and _dest_t
-       in T_terms.v. They should look like :
-       "Definition _123456 := fun (...) => _mk_T [...]" where _123456 (for example) is simply a temporary name
-       for a constructor C, replaced soon after with "Definition C := _123456".
-       [_dest_T (C (...))] should then have value [...].
-
-    - You can then define _mk_t := finv _dest_t.
-
-    - Then, in file_types.v, you should find two axioms named axiom_... stating
-      that _dest_T and _mk_t are the inverse of each other. Prove them in the mappings file using the following
-      tactics :
-      *)
-
-(* _dest_inj proves that _dest is injective by double induction.
-   Can fail when the induction principle isn't suited.
-   Only works for non mutually defined types. *)
-Ltac _dest_inj :=
-  match goal with |- forall x x', _ => let e := fresh in
-    induction x ; induction x' ; simpl ; intro e ;
-    (* e is of the form "CONSTR n a f = CONSTR n' a' f'", so inversion
-       gives hypotheses n=n' , a=a' and f=f'. *)
-    inversion e ; auto ;
-    repeat rewrite FCONS_inj in * ; (* f and f' should represent lists of recursive calls
-                                       so we transform their equality into equality of
-                                       each recursive call (so of the form
-                                       "et : _dest_T t = _dest_T t'") *)
-    f_equal ;
-    match goal with IH : _ |- _ => now apply IH (* trying to apply the
-                                                   induction hypothesis blindly to prove 
-                                                   t = t' from et *)
-    end end.
-
-(* As long as _mk_T is defined as finv _dest_T, _mk_dest_rec will
-   transform a goal of the form [forall x, (_mk_T (_dest_T x)) = x] into
-   a goal stating injectivity of _dest_T thanks to finv_inv_l, then try to apply _dest_inj. *)
-Ltac _mk_dest_rec :=
-  intros ; apply finv_inv_l ;
-  repeat match goal with useless : _ |- _ => clear useless end ; try _dest_inj.
-
-(* Try to solve a goal of the form [forall r, P r = (_dest_T (_mk_T r)) = r)]
-   for P defining the subset of recspace A with which the defined type(s) are
-   isomorphism.
-   Thanks to finv_inv_r, the goal can be replaced by [P r <-> exists x, _dest_T x = r]
-   as long as _mk_T is defined as finv _dest_T.
-
-   P is an inductive definition so the following is very similar to ind_align,
-   except that [exists x, _dest_T x = r] is not inductive so we are rather inducting on x.
-   Compared to ind_align, we do not have access to the constructor tactic to automatically
-   find the correct constructor so it currently needs to be done by hand. *)
-Ltac _dest_mk_rec :=
-  let H := fresh in 
-  let x := fresh "x" in 
-  apply finv_inv_r ;
-  [ intro H ; apply H ;
-    clear H ; intros x H ;
-    full_destruct ; rewrite H ;
-    clear H ; simpl in *
-  | let x := fresh "x" in
-    (* simply inducting over [x] such that [_dest_ x = r]. *)
-    intros (x,<-) ;
-    induction x ; let P := fresh in
-    let H' := fresh in
-    intros P H' ; apply H' ; try breakgoal ].
-
-(* - Finally, prove the definition of all constructors ( the lemmas _123456_def and C_def
-     right under their definition in T_terms.v, replacing them with the new definition ).
-     constr_align automatically proves _123456_def (afterwards, C_def is just reflexivity) : *)
-Ltac fresh_ext := let x := fresh "x" in ext x.
-Ltac constr_align H := (* Takes as argument the lemma [forall x, _mk_T (_dest_T x) = x].
-                          Requires explicit type arguments. *)
-  repeat fresh_ext ; match goal with |- ?x = _ => apply (eq_sym (H x)) end.
-
-(****************************************************************************)
-(* Some tactics to help automate recursive function alignments *)
-(****************************************************************************)
-
-(* Tries to prove a goal [f = ε P uv] where f is recursively defined. *)
-Ltac total_align1 :=
-  align_ε' ; (* At this state, we have two goals : [P f] and [P f -> P f' -> f = f'].
-                We now assume that [P f] is of the form
-                [Q1 f C1 = ... /\ Q2 f C2 = ... /\ ... /\ Qn f Cn = ...]
-                where the Ci are the constructors of the type and
-                the Qi are universal quantifications over other arguments and subterms of the Ci. *)
-  [ repeat split ; intros ; auto 
-  | let f' := fresh in
-    let r := fresh in
-    let a := fresh in
-    let b := fresh in
-    let c := fresh in
-    let d := fresh in
-    let H := fresh in
-    let H' := fresh in
-    intros f' H H' ; ext r ; induction r ; 
-    try ext a; try ext b ; try ext c ; try ext d ;
-    try full_destruct ; (* with the correct induction principle, we have one case per clause,
-                           we can replace [f] and [f']'s values with the corresponding
-                           clause in [P] (that we have split).
-                           By also rewriting all induction hypotheses,
-                           the goal should become a reflexive equality.
-
-                           For more complex types, it is possible to try and adapt this tactic
-                           to specify how the induction hypothesis should be used.
-                           See term_align in coq-hol-light-Logic1 for an example 
-                           with lists as recursive arguments *)
-    repeat match goal with
-    H : _ |- _ => rewrite H end ;
-    auto (* reflexivity would be more ideal but sometimes rewriting the induction hypothesis fails
-            because the recursive call is dependant on something else, for example something quantified. *)
-    ].
-
-(* The following only change which argument induction is applied on. *)
-
-Ltac total_align2 :=
-  align_ε' ; [ repeat split ; intros ; auto
-  | let f' := fresh in
-    let r := fresh in
-    let a := fresh in
-    let b := fresh in
-    let c := fresh in
-    let d := fresh in
-    let H := fresh in
-    let H' := fresh in
-    intros f' H H' ; ext a r ;
-    revert a ; induction r ; intro a ; try ext b ;
-    try ext c ; try ext d ;
-    try full_destruct ; repeat match goal with
-    H : ?P |- _ => rewrite H end ; auto ].
-
-Ltac total_align3 :=
-  align_ε' ; [ repeat split ; intros ; auto
-  | let f' := fresh in
-    let r := fresh in
-    let a := fresh in
-    let b := fresh in
-    let c := fresh in
-    let d := fresh in
-    let H := fresh in
-    let H' := fresh in
-    intros f' H H' ; ext a b r ;
-    revert a b ; induction r ; intros a b ;
-    try ext c ; try ext d ;
-    try full_destruct ; repeat match goal with
-    H : _ |- _ => rewrite H end ; auto ].
-
-Ltac total_align4 :=
-  align_ε' ; [ repeat split ; intros ; auto
-  | let f' := fresh in
-    let r := fresh in
-    let a := fresh in
-    let b := fresh in
-    let c := fresh in
-    let d := fresh in
-    let H := fresh in
-    let H' := fresh in
-    intros f' H H' ; ext a b c ; ext r ;
-    revert a b c ; induction r ; intros a b c ;
-    try ext d ; try full_destruct ;
-    repeat match goal with
-    H : _ |- _ => rewrite H end ; auto ].
-
-Ltac total_align5 :=
-  align_ε' ; [ repeat split ; intros ; auto
-  | let f' := fresh in
-    let r := fresh in
-    let a := fresh in
-    let b := fresh in
-    let c := fresh in
-    let d := fresh in
-    let H := fresh in
-    let H' := fresh in
-    intros f' H H' ; ext a b c ; ext d r ;
-    revert a b c d ; induction r ; intros a b c d ;
-    try full_destruct ; repeat match goal with
-    H : _ |- _ => rewrite H ; clear H end ; auto ].
-
-Ltac total_align :=
-  try total_align1 ;
-  try total_align2 ;
-  try total_align3 ;
-  try total_align4 ;
-  try total_align5.
-
-(****************************************************************************)
-(* Alignment of partial functions. *)
-(****************************************************************************)
-
-(* It is possible in HOL_Light to define a function
-   recursively while not defining it for some constructors.
-   The function will then have its value on these constructors chosen
-   by the ε operator. In that case it is necessary to define the rocq function
-   to be trivially equal to the HOL-Light one on each of these constructors.
-
-   The following tactics allow to align such a partially defined function
-   when provided with a predicate Q representing the cases where equality has to
-   be trivial.
-
-   Q should be defined inductively so as to be able to automatically discharge
-   the goal [Q x -> _=_] via inversion. *)
-
-(* First, the following lemmas mimick align_ε in the case where equality has to
-   be trivial on Q. They can be used for any partial function, not just recursive
-   (for example, a function defined through "new_specification") *)
-
-Lemma partial_align_case1 {U A B : Type'} {uv0 : U} {x : A}
-  (Q : A -> Prop) (f : U -> A -> B) (P : (U -> A -> B) -> Prop) :
-  P f -> (forall x', Q x' -> f uv0 x' = ε P uv0 x') ->
-  (forall f' uv x', P f ->  P f' -> (forall x'', Q x'' -> f uv x'' = f' uv x'') ->
-  f uv x' = f' uv x') -> f uv0 x = ε P uv0 x.
-Proof.
-  intros Hf Htriv Hunique.
-  apply Hunique;auto. apply ε_spec. now exists f.
-Qed.
-
-Lemma partial_align_case2 {U A B C : Type'} {uv0 : U} {x : B} {y : A}
-  (Q : A -> Prop) (f : U -> B -> A -> C) (P : (U -> B -> A -> C) -> Prop) :
-  P f -> (forall x' y', Q y' -> f uv0 x' y' = ε P uv0 x' y') ->
-  (forall f' uv x' y', P f ->  P f' ->
-  (forall x'' y'', Q y'' -> f uv x'' y'' = f' uv x'' y'') ->
-  f uv x' y' = f' uv x' y') -> f uv0 x y = ε P uv0 x y.
-Proof.
-  intros Hf Htriv Hunique.
-  apply Hunique;auto. apply ε_spec. now exists f.
-Qed.
-
-Lemma partial_align_case3 {U A B C D : Type'} {uv0 : U} {x : B} {y : C} {z : A}
-  (Q : A -> Prop) (f : U -> B -> C -> A -> D) (P : (U -> B -> C -> A -> D) -> Prop) :
-  P f -> (forall x' y' z', Q z' -> f uv0 x' y' z' = ε P uv0 x' y' z') ->
-  (forall f' uv x' y' z', P f ->  P f' ->
-  (forall x'' y'' z'', Q z'' -> f uv x'' y'' z'' = f' uv x'' y'' z'') ->
-  f uv x' y' z' = f' uv x' y' z') -> f uv0 x y z = ε P uv0 x y z.
-Proof.
-  intros Hf Htriv Hunique.
-  apply Hunique;auto. apply ε_spec. now exists f.
-Qed.
-
-(* The following ressembles total_align but also tries to automatically get rid of every cases that
-   are in Q. It is designed for recursive functions only. *)
-Ltac partial_align1 Q :=
-  let f' := fresh "f'" in 
-  let uv := fresh "uv" in
-  let H := fresh in
-  let H' := fresh "H'" in
-  let Htriv := fresh "Htriv" in
-  match goal with
-  |- ?f ?x = ε _ _ ?x => apply (partial_align_case1 Q (fun _ => f)) ; (* replace f with (fun _ => f) uv *)
-    clear x ; [repeat split ; auto
-    | intro x ; now inversion 1 (* Additional goal [forall x, Q x -> f uv x = ε uv x]
-                                       compared to total_align, if Q is inductive and the
-                                       equality is trivial, inversion should do the job. *)
-    | let y := fresh "y" in
-      let z := fresh "z" in
-      intros f' uv x H H' Htriv ; try ext y ; try ext z ;
-      specialize (H uv) ; specialize (H' uv) ;
-      induction x ; try (now apply Htriv ; try constructor ; auto) ; (* automatically takes care of cases
-                                                                        in Q. *)
-      clear Htriv ; (* We do not want to be able to rewrite Htriv outside of cases in Q. *)
-      try full_destruct ;
-      repeat match goal with H : _ |- _ => rewrite H end ; auto ] end.
-
-Ltac partial_align2 Q :=
-  let f' := fresh "f'" in 
-  let uv := fresh "uv" in
-  let H := fresh in
-  let H' := fresh "H'" in
-  let Htriv := fresh "Htriv" in
-  match goal with
-  |- ?f ?y ?x = ε _ _ ?y ?x => apply (partial_align_case2 Q (fun _ => f)) ;
-    clear y x ; [repeat split ; auto
-    | intros y x ; now inversion 1
-    | let z := fresh "z" in
-      intros f' uv y x H H' Htriv ; try ext z ;
-      specialize (H uv) ; specialize (H' uv) ;
-      induction x ; try (now apply Htriv ; try constructor ; auto) ;
-      clear Htriv ; try full_destruct ;
-      repeat match goal with H : _ |- _ => rewrite H end ; auto ] end.
-
-Ltac partial_align3 Q :=
-  let f' := fresh "f'" in 
-  let uv := fresh "uv" in
-  let H := fresh in
-  let H' := fresh "H'" in
-  let Htriv := fresh "Htriv" in
-  match goal with
-  |- ?f ?y ?z ?x = ε _ _ ?y ?z ?x => apply (partial_align_case3 Q (fun _ => f)) ;
-    clear y z x ; [repeat split ; auto
-    | intros y z x ; now inversion 1
-    | intros f' uv y z x H H' Htriv ;
-      specialize (H uv) ; specialize (H' uv) ;
-      induction x ; try (now apply Htriv ; try constructor ; auto) ;
-      clear Htriv ; try full_destruct ;
-      repeat match goal with H : _ |- _ => rewrite H end ; auto ] end.
-
-Ltac partial_align Q :=
-  let x := fresh "x" in
-  let y := fresh "y" in
-  let z := fresh "z" in
-  ext x ; partial_align1 Q +
-  (ext y ; partial_align2 Q +
-  (ext z ; partial_align3 Q)).
-
 (****************************************************************************)
 (* Alignment of the sum type constructor. *)
 (****************************************************************************)
@@ -2370,11 +2467,11 @@ end.
 Definition _mk_sum {A B : Type'} := finv (@_dest_sum A B).
 
 Lemma axiom_11 {A B : Type'} : forall (a : sum A B), (@_mk_sum A B (@_dest_sum A B a)) = a.
-Proof. _mk_dest_rec. Qed.
+Proof. _mk_dest_inductive. Qed.
 
 Lemma axiom_12 : forall {A B : Type'} (r : recspace (prod A B)), ((fun a : recspace (prod A B) => forall sum' : (recspace (prod A B)) -> Prop, (forall a' : recspace (prod A B), ((exists a'' : A, a' = ((fun a''' : A => @CONSTR (prod A B) (NUMERAL 0) (@pair A B a''' (@ε B (fun v : B => True))) (fun n : N => @BOTTOM (prod A B))) a'')) \/ (exists a'' : B, a' = ((fun a''' : B => @CONSTR (prod A B) (N.succ (NUMERAL N0)) (@pair A B (@ε A (fun v : A => True)) a''') (fun n : N => @BOTTOM (prod A B))) a''))) -> sum' a') -> sum' a) r) = ((@_dest_sum A B (@_mk_sum A B r)) = r).
 Proof.
-  intros A B r. _dest_mk_rec.
+  intros A B r. _dest_mk_inductive.
   now exists (inl x0). now exists (inr x0).
 Qed.
 
@@ -2401,7 +2498,7 @@ Definition _dest_option : forall {A : Type'}, option A -> recspace A :=
 Definition _mk_option {A : Type'} := finv (@_dest_option A).
 
 Lemma axiom_13 {A : Type'} : forall (a : option A), (@_mk_option A (@_dest_option A a)) = a.
-Proof. _mk_dest_rec. Qed.
+Proof. _mk_dest_inductive. Qed.
 
 Definition option_pred {A : Type'} (r : recspace A) :=
   forall option' : recspace A -> Prop,
@@ -2412,7 +2509,7 @@ Definition option_pred {A : Type'} (r : recspace A) :=
 
 Lemma axiom_14' : forall {A : Type'} (r : recspace A), (option_pred r) = ((@_dest_option A (@_mk_option A r)) = r).
 Proof.
-  intros A r. _dest_mk_rec. now exists None. now exists (Some x0).
+  intros A r. _dest_mk_inductive. now exists None. now exists (Some x0).
 Qed.
 
 Lemma axiom_14 : forall {A : Type'} (r : recspace A), ((fun a : recspace A => forall option' : (recspace A) -> Prop, (forall a' : recspace A, ((a' = (@CONSTR A (NUMERAL N0) (@ε A (fun v : A => True)) (fun n : N => @BOTTOM A))) \/ (exists a'' : A, a' = ((fun a''' : A => @CONSTR A (N.succ (NUMERAL N0)) a''' (fun n : N => @BOTTOM A)) a''))) -> option' a') -> option' a) r) = ((@_dest_option A (@_mk_option A r)) = r).
@@ -2442,7 +2539,7 @@ Fixpoint _dest_list {A : Type'} l : recspace A :=
 Definition _mk_list {A : Type'} := finv (@_dest_list A).
 
 Lemma axiom_15 {A : Type'} : forall (a : list A), (@_mk_list A (@_dest_list A a)) = a.
-Proof. _mk_dest_rec. Qed.
+Proof. _mk_dest_inductive. Qed.
 
 Definition list_pred {A : Type'} (r : recspace A) :=
   forall list'0 : recspace A -> Prop,
@@ -2453,7 +2550,7 @@ Definition list_pred {A : Type'} (r : recspace A) :=
 
 Lemma axiom_16' : forall {A : Type'} (r : recspace A), (list_pred r) = ((@_dest_list A (@_mk_list A r)) = r).
 Proof.
-  intros A r. _dest_mk_rec.
+  intros A r. _dest_mk_inductive.
   - now exists nil.
   - exists (cons x0 x2). now rewrite <- H0.
   - right. exists a. exists (_dest_list x0). split.
@@ -2557,9 +2654,9 @@ Definition bool_of_Prop (P:Prop) : bool := ifp P then true else false.
 Coercion bool_of_Prop: Sortclass >-> bool.
 *)
 (* There are problems for mapping FILTER to List.filter because
-HOL-Light's FILTER takes propositional functions as argument while
+HOL Light's FILTER takes propositional functions as argument while
 Coq's List.filter function takes boolean functions as argument. The
-error does not occur here but later in the HOL-Light proofs.
+error does not occur here but later in the HOL Light proofs.
 
 Fixpoint filter_bis {A : Type'} (f : A -> Prop) (l : list A) : list A
       := match l with | nil => nil | x :: l => @COND (list A) (f x)
@@ -2820,7 +2917,7 @@ Qed.
 (****************************************************************************)
 
 (* Note the mismatch between Coq's ascii which takes booleans as arguments
-and HOL-Light's char which takes propositions as arguments. *)
+and HOL Light's char which takes propositions as arguments. *)
 
 Require Import Stdlib.Strings.Ascii.
 
@@ -2874,7 +2971,6 @@ Qed.
 Lemma char_eq : char_pred = char_ind.
 Proof.
   symmetry. ind_align.
-  - exist a0 a1 a2 a3 a4. now exist a5 a6 a7.
   - rewrite (Prop_bool_eq x0), (Prop_bool_eq x1), (Prop_bool_eq x2), (Prop_bool_eq x3),
       (Prop_bool_eq x4), (Prop_bool_eq x5), (Prop_bool_eq x6), (Prop_bool_eq x7).
     exists.
@@ -3340,7 +3436,7 @@ Proof.
 Abort.*)
 
 (*****************************************************************************)
-(* HOL-Light definition of real numbers. *)
+(* HOL Light definition of real numbers. *)
 (*****************************************************************************)
 
 Definition real := quotient treal_eq.
