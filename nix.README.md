@@ -5,7 +5,18 @@ nix-shell https://github.com/coq-community/coq-nix-toolbox/archive/master.tar.gz
 nix-shell --arg do-nothing true --run "initNixConfig coq-hol-light-real-with-N"
 ```
 This generates the following files 
-- default.nix : a file that describes the basic dependencies of the coq-nix-toolbix You canb keep as is (for the moment)
+- default.nix : a file that describes the basic dependencies of the coq-nix-toolbix You can keep as is (for the moment)
 - .nix/coq-nix-toolbox.nix : with a hash number auto-generated
 - .nix/config.nix : a skeleton with description of the package under devellopement as well as dependencies and reverse dependencies.
 
+# Editing the config.nix file
+In the `.nix/config.nix` file one needs to edit the following informations in particular :
+```
+  attribute = "coq-hol-light-real-with-N";
+  default-bundle = "default";
+  bundles.default = {
+    rocqPackages.rocq-core.override.version = "9.0";
+    push-branches = [ "master" "nixReloaded" ];
+  };
+```
+Once this field edited as described above, one can gene
