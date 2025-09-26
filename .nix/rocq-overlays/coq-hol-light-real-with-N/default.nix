@@ -3,18 +3,17 @@
 ## Some hints for manual modifications are in the file,
 ## but the full doc is on nixos / nix packages website:
 ## https://nixos.org/manual/nixpkgs/stable/#sec-language-coq
-
-{ lib, mkCoqDerivation, which, coq
+{ lib, mkRocqDerivation, which, coq, bignums
   ## declare extra dependencies here, to be used in propagateBuildInputs e.g.
   # , mathcomp, coq-elpi
   , version ? null }:
 
-with lib; mkCoqDerivation {
+with lib; mkRocqDerivation {
   pname = "coq-hol-light-real-with-N";
   ## you can configure the domain, owner and repository, the default are:
-  # repo = "coq-hol-light-real-with-N";
-  # owner = "coq-community";
-  # domain = "github.com";
+  repo = "coq-hol-light-real-with-N";
+  owner = "Deducteam";
+  domain = "github.com";
 
   inherit version;
 ## The `defaultVersion` attribute is important for nixpkgs but can be kept unchanged
@@ -26,27 +25,7 @@ with lib; mkCoqDerivation {
     # { case = range "8.13" "8.14"; out = "1.2.0"; }
     ## other predicates are `isLe v`, `isLt v`, `isGe v`, `isGt v`, `isEq v` etc
   ] null;
-
-  ## Declare existing releases
-  ## leave sha256 empty at first and then copy paste
-  ## the resulting sha given by the error message
-  # release."1.1.1".sha256 = "";
-  ## if the tag is not exactly the version number you can amend like this
-  # release."1.1.1".rev = "v1.1.1";
-  ## if a consistent scheme gives the tag from the release number, you can do like this:
-  # releaseRev = v: "v${v}";
-
-  ## Add dependencies in here. In particular you can add
-  ## - arbitrary nix packages (you need to require them at the beginning of the file)
-  ## - Coq packages (require them at the beginning of the file)
-  ## - OCaml packages (use `coq.ocamlPackages.xxx`, no need to require them at the beginning of the file)
-  # propagatedBuildInputs = [ ]; ## e.g. `= [ mathcomp coq-elpi ]`
-
-  ## Does the package contain OCaml code?
-  # mlPlugin = false;
-
-  ## Give some meta data
-  ## This is needed for submitting the package to nixpkgs but not required for local use.
+  propagatedBuildInputs = [ bignums ];
   meta = {
     ## Describe your package in one sentence
     # description = "";
