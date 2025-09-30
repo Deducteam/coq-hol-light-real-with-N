@@ -19,4 +19,28 @@ In the `.nix/config.nix` file one needs to edit the following informations in pa
     push-branches = [ "master" "nixReloaded" ];
   };
 ```
-Once this field edited as described above, one can gene
+Once this field edited as described above, run nix-shell to check if every thing is ok.
+
+# Generating the Rocq-overlays folder and the default.nix for coq-hol-light-real-with
+
+Run `nix-shell --arg do-nothing true --run "createOverlay PACKAGENAME"` to generate 
+`.nix/rocq-overlays/coq-hol-light-real-with-N/default.nix` then edit this file as follows :
+```
+{ lib, mkRocqDerivation, which, coq, bignums <!-- add bignums as a dependency of Coq-hol-light-real-with-N  -->
+  , version ? null }:
+
+with lib; mkRocqDerivation {
+  pname = "coq-hol-light-real-with-N";
+  repo = "coq-hol-light-real-with-N";
+  owner = "Deducteam";
+  domain = "github.com";
+
+  inherit version;
+  defaultVersion = with versions; switch coq.coq-version [
+  ] null;
+  buildInputs = [ bignums ];
+  meta = {
+  };
+}
+
+```
