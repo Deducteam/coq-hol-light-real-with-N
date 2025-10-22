@@ -1,8 +1,9 @@
-{ lib, mkRocqDerivation, which, coq
+{ pkgs ? import <nixpkgs> {}
+  , lib, mkCoqDerivation, which, coq
   , bignums
   , version ? null }:
 
-with lib; mkRocqDerivation {
+with lib; mkCoqDerivation {
   pname = "coq-hol-light-real-with-N";
   repo = "coq-hol-light-real-with-N";
   owner = "Deducteam";
