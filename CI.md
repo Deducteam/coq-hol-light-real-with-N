@@ -1,5 +1,9 @@
-First steps are described in the README.md of the [Coq-nix-toolbox](https://github.com/rocq-community/coq-nix-toolbox/blob/master/README.md)
+This Document describes how gihub pipeline actions were generated using the Coq nix toolbox.
 
+The first steps are described in the README.md of the [Coq-nix-toolbox](https://github.com/rocq-community/coq-nix-toolbox/blob/master/README.md)
+
+# Initializing Nix
+First of all, initialize Nix (after installing) as follows :
 ```bash
 nix-shell https://github.com/coq-community/coq-nix-toolbox/archive/master.tar.gz --arg do-nothing true --run generateNixDefault
 nix-shell --arg do-nothing true --run "initNixConfig coq-hol-light-real-with-N"
