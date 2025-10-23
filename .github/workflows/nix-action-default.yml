@@ -199,3 +199,5 @@ on:
     branches:
     - master
     - nixReloaded
+    paths-ignore:
+      - '**/*.md'
