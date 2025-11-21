@@ -2,16 +2,17 @@
 
 set -e # to exit as soon as there is an error
 
-hollight_version=3.0.0 # for dependencies only
-hollight_commit=72b2b70 # 3.0.0
-hol2dk_commit=126f95c
-lambdapi_commit=c1cb2edf
+#opam_version=2.2.1
+#dune_version=3.20.2
+#make_version=4.3
+
+hollight_version=3.1.0
+hollight_commit=Release-3.1.0
+hol2dk_commit=2.1.0
+lambdapi_version=3.0.0
+camlp5_version=8.03.06
 ocaml_version=5.3.0
 rocq_version=9.0.0
-
-opam_version=2.3.0
-dune_version=3.20.2
-camlp5_version=8.03.06
 
 hollight_file=hol_upto_real.ml
 base=`basename $hollight_file .ml`
@@ -35,6 +36,13 @@ checkout_commit() {
     cd ..
 }
 
+#usage: install package_name version
+install() {
+    line
+    echo install $1 ...
+    opam install -y $1.$2
+}
+
 create_opam_switch() {
     line
     echo create opam switch ...
@@ -44,6 +52,7 @@ create_opam_switch() {
 install_hollight_deps() {
     line
     echo install HOL-Light dependencies ...
+    opam pin -y camlp5 $camlp5_version
     opam install -y --deps-only hol_light.$hollight_version
 }
 
@@ -53,12 +62,6 @@ install_lambdapi() {
     git checkout -b reproduce
     opam install -y .
     cd ..
-}
-
-install_rocq() {
-    line
-    echo install rocq ...
-    opam install -y rocq-prover.$rocq_version
 }
 
 install_deps() {
@@ -177,8 +180,9 @@ stage() {
     fi
     if test $i -eq $1
     then
-        $2
-        echo $1 > STAGE
+        shift
+        $*
+        echo $i > STAGE
     fi
 }
 
@@ -190,8 +194,8 @@ fi
 stage 1 create_opam_switch
 eval `opam env`
 stage 2 install_hollight_deps
-stage 3 install_lambdapi
-stage 4 install_rocq
+stage 3 install lambdapi $lambdapi_version
+stage 4 install rocq-prover $rocq_version
 stage 5 install_deps
 stage 6 install_hol2dk
 stage 7 install_hollight

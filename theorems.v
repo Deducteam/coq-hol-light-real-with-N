@@ -616,6 +616,7 @@ Axiom thm_MEM_MAP : forall {A B : Type'}, forall f : A -> B, forall y : B, foral
 Axiom thm_FILTER_APPEND : forall {A : Type'}, forall P : A -> Prop, forall l1 : list A, forall l2 : list A, (@FILTER A P (@app A l1 l2)) = (@app A (@FILTER A P l1) (@FILTER A P l2)).
 Axiom thm_FILTER_MAP : forall {A B : Type'}, forall P : B -> Prop, forall f : A -> B, forall l : list A, (@FILTER B P (@List.map A B f l)) = (@List.map A B f (@FILTER A (@o A B Prop P f) l)).
 Axiom thm_MEM_FILTER : forall {A : Type'}, forall P : A -> Prop, forall l : list A, forall x : A, (@List.In A x (@FILTER A P l)) = ((P x) /\ (@List.In A x l)).
+Axiom thm_LENGTH_FILTER : forall {A : Type'}, forall P : A -> Prop, forall l : list A, N.le (@lengthN A (@FILTER A P l)) (@lengthN A l).
 Axiom thm_EX_MEM : forall {A : Type'}, forall P : A -> Prop, forall l : list A, (exists x : A, (P x) /\ (@List.In A x l)) = (@List.Exists A P l).
 Axiom thm_MAP_FST_ZIP : forall {A B : Type'}, forall l1 : list A, forall l2 : list B, ((@lengthN A l1) = (@lengthN B l2)) -> (@List.map (prod A B) A (@fst A B) (@zip A B l1 l2)) = l1.
 Axiom thm_MAP_SND_ZIP : forall {A B : Type'}, forall l1 : list A, forall l2 : list B, ((@lengthN A l1) = (@lengthN B l2)) -> (@List.map (prod A B) B (@snd A B) (@zip A B l1 l2)) = l2.
@@ -668,6 +669,10 @@ Axiom thm_PAIRWISE_TRANSITIVE : forall {A : Type'}, forall R' : A -> A -> Prop, 
 Axiom thm_LENGTH_LIST_OF_SEQ : forall {A : Type'}, forall s : N -> A, forall n : N, (@lengthN A (@list_of_Nseq A s n)) = n.
 Axiom thm_EL_LIST_OF_SEQ : forall {A : Type'}, forall s : N -> A, forall m : N, forall n : N, (N.lt m n) -> (@Nth A m (@list_of_Nseq A s n)) = (s m).
 Axiom thm_LIST_OF_SEQ_EQ_NIL : forall {A : Type'}, forall s : N -> A, forall n : N, ((@list_of_Nseq A s n) = (@nil A)) = (n = N0).
+Axiom thm_LIST_OF_SEQ_EQ_SELF : forall {A : Type'}, forall l : list A, (@list_of_Nseq A (fun i : N => @Nth A i l) (@lengthN A l)) = l.
+Axiom thm_LENGTH_EQ_LIST_OF_SEQ : forall {A : Type'}, forall l : list A, forall n : N, ((@lengthN A l) = n) = (l = (@list_of_Nseq A (fun i : N => @Nth A i l) n)).
+Axiom thm_MAP_LIST_OF_SEQ : forall {A B : Type'}, forall f : N -> A, forall g : A -> B, forall n : N, (@List.map A B g (@list_of_Nseq A f n)) = (@list_of_Nseq B (@o N A B g f) n).
+Axiom thm_LIST_OF_SEQ : forall {A : Type'}, (forall f : N -> A, (@list_of_Nseq A f N0) = (@nil A)) /\ (forall f : N -> A, forall n : N, (@list_of_Nseq A f (N.succ n)) = (@cons A (f N0) (@list_of_Nseq A (@o N N A f N.succ) n))).
 Axiom thm_MONO_ALL : forall {A : Type'} (P : A -> Prop) (Q : A -> Prop) (l : list A), (forall x : A, (P x) -> Q x) -> (@List.Forall A P l) -> @List.Forall A Q l.
 Axiom thm_MONO_ALL2 : forall {A B : Type'} (P : A -> B -> Prop) (Q : A -> B -> Prop) (l : list A) (l' : list B), (forall x : A, forall y : B, (P x y) -> Q x y) -> (@List.Forall2 A B P l l') -> @List.Forall2 A B Q l l'.
 Axiom thm_char_INDUCT : forall P : Ascii.ascii -> Prop, (forall a0 : Prop, forall a1 : Prop, forall a2 : Prop, forall a3 : Prop, forall a4 : Prop, forall a5 : Prop, forall a6 : Prop, forall a7 : Prop, P (ASCII a0 a1 a2 a3 a4 a5 a6 a7)) -> forall x : Ascii.ascii, P x.
