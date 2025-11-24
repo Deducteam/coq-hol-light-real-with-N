@@ -1,20 +1,31 @@
-This Document describes how gihub pipeline actions were generated using the Coq nix toolbox.
+This Document describes how Gihub pipeline actions were generated using the Coq-nix-toolbox.
 
 The first steps are described in the README.md of the [Coq-nix-toolbox](https://github.com/rocq-community/coq-nix-toolbox/blob/master/README.md)
 
+# Installing Nix
+Nix installation can be done in Multi-user mode with
+```bash
+sh <(curl --proto '=https' --tlsv1.2 -L https://nixos.org/nix/install) --daemon
+```
+or in Single-user mode :
+```bash
+sh <(curl --proto '=https' --tlsv1.2 -L https://nixos.org/nix/install) --no-daemon
+```
+Details on the pros and cons of both methods can be found on the [Nix installation webpage](https://nixos.org/download/)
+
 # Initializing Nix
-First of all, initialize Nix (after installing) as follows :
+First, initialize Nix as follows :
 ```bash
 nix-shell https://github.com/coq-community/coq-nix-toolbox/archive/master.tar.gz --arg do-nothing true --run generateNixDefault
 nix-shell --arg do-nothing true --run "initNixConfig coq-hol-light-real-with-N"
 ```
 This generates the following files 
-- default.nix : a file that describes the basic dependencies of the coq-nix-toolbix You can keep as is (for the moment)
-- .nix/coq-nix-toolbox.nix : with a hash number auto-generated
-- .nix/config.nix : a skeleton with description of the package under devellopement as well as dependencies and reverse dependencies.
+- `default.nix` : a file that describes the basic dependencies of the `coq-nix-toolbix` that you can keep as is (for the moment)
+- `.nix/coq-nix-toolbox.nix` : with a hash number auto-generated
+- `.nix/config.nix` : a skeleton with description of the package under development as well as dependencies and reverse dependencies.
 
 # Editing the config.nix file
-In the `.nix/config.nix` file one needs to edit the following informations in particular :
+In the `.nix/config.nix` file one needs to edit the following fields in particular :
 ```
   attribute = "coq-hol-light-real-with-N";
   default-bundle = "default";
@@ -23,7 +34,7 @@ In the `.nix/config.nix` file one needs to edit the following informations in pa
     push-branches = [ "master" "nixReloaded" ];
   };
 ```
-Once this field edited as described above, run `nix-shell` to check if every thing is ok.
+Then, run `nix-shell` to check if every thing is ok.
 
 # Generating the `coq-overlays` folder and the `default.nix` for `coq-hol-light-real-with-N`
 
@@ -32,7 +43,7 @@ Run `nix-shell --arg do-nothing true --run "createOverlay PACKAGENAME"` to gener
 ```nix
 { pkgs ? import <nixpkgs> {}
   , lib, mkCoqDerivation, which, coq
-  , bignums <!-- Coq-hol-light-real-with-N  depends on bignums  -->
+  ,   , stdlib <!-- Coq-hol-light-real-with-N  depends on stdlib  -->
   , version ? null }:
 
 with lib; mkCoqDerivation {
@@ -44,7 +55,7 @@ with lib; mkCoqDerivation {
   inherit version;
   defaultVersion = with versions; switch coq.coq-version [
   ] null;
-  buildInputs = [ bignums ];
+  buildInputs = [ stdlib ];
   meta = {
   };
 }
@@ -53,11 +64,11 @@ This file tells Nix how to build the `coq-hol-light-real-with-N` package includi
 
 # Creating the `default.nix` file of the reverse dependency
 The objective being to test the reverse dependency of `coq-hol-light-real-with-N`, name `coq-hol-light`, we will create a folder dedicated to this package and explain how to build it from its dependencies.
-```
+```bash
 mkdir .nix/coq-overlays/coq-hol-light
 touch .nix/coq-overlays/coq-hol-light/default.nix
 ```
-then edit it as follows :
+Then edit it as follows :
 ```
 { lib, mkCoqDerivation, coq-hol-light-real-with-N
   , fourcolor
@@ -82,25 +93,25 @@ with lib; mkCoqDerivation {
   };
 }
 ```
-This file notably tell Nix where to find the sources of `coq-hol-light` and that `coq-hol-light` depends on `coq-hol-light-real-with-N` which will have as side effect that the `coq-hol-light` job in the pipeline (that we will create in a moment) will be triggered right after the `coq-hol-light-real-with-N` job.
+This file notably tells Nix where to find the sources of `coq-hol-light` and that `coq-hol-light` depends on `coq-hol-light-real-with-N` which will have as side effect that the `coq-hol-light` job in the pipeline (that we will create in a moment) will be triggered right after the `coq-hol-light-real-with-N` job.
 
 # Testing build are OK
-Before testing the builds in the github pipeline, it can be usefull to test them locally.
+Before testing the builds in the GitHub pipeline, it can be useful to test them locally.
 To this end run
-```
+```bash
 nix-build
 ```
 to test `coq-hol-light-real-with-N`
 and run 
-```
+```bash
 nix-build --argstr job coq-hol-light
 ```
 to test `coq-hol-light`
 
 If no errors are detected, one can move to the next step.
 
-# Generating the github actions
-To generate the github actions, simply run 
+# Generating the GitHub actions
+To generate the GitHub actions, simply run 
 ```
 nix-shell --arg do-nothing true --run "genNixActions"
 ```

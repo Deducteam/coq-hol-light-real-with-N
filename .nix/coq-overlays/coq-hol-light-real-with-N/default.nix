@@ -1,6 +1,6 @@
 { pkgs ? import <nixpkgs> {}
   , lib, mkCoqDerivation, which, coq
-  , bignums
+  , stdlib
   , version ? null }:
 
 with lib; mkCoqDerivation {
@@ -12,7 +12,7 @@ with lib; mkCoqDerivation {
   inherit version;
   defaultVersion = with versions; switch coq.coq-version [
   ] null;
-  buildInputs = [ bignums ];
+  buildInputs = [ stdlib ];
   meta = {
   };
 }
