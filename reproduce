@@ -71,8 +71,8 @@ install() {
 
 create_opam_switch() {
     start create opam switch
-    opam switch create . $ocaml_version
     opam update
+    opam switch create . $ocaml_version
 }
 
 install_hollight_deps() {
