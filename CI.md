@@ -38,7 +38,7 @@ Then, run `nix-shell` to check if every thing is ok.
 
 # Generating the `coq-overlays` folder and the `default.nix` for `coq-hol-light-real-with-N`
 
-Run `nix-shell --arg do-nothing true --run "createOverlay PACKAGENAME"` to generate 
+Run `nix-shell --arg do-nothing true --run "createOverlay coq-hol-light-real-with-N"` to generate 
 `.nix/coq-overlays/coq-hol-light-real-with-N/default.nix` then edit this file as follows :
 ```nix
 { pkgs ? import <nixpkgs> {}
@@ -95,27 +95,19 @@ with lib; mkCoqDerivation {
 ```
 This file notably tells Nix where to find the sources of `coq-hol-light` and that `coq-hol-light` depends on `coq-hol-light-real-with-N` which will have as side effect that the `coq-hol-light` job in the pipeline (that we will create in a moment) will be triggered right after the `coq-hol-light-real-with-N` job.
 
-# Testing build are OK
+# Testing builds are OK
 Before testing the builds in the GitHub pipeline, it can be useful to test them locally.
-To this end run
-```bash
-nix-build
-```
-to test `coq-hol-light-real-with-N`
-and run 
-```bash
-nix-build --argstr job coq-hol-light
-```
-to test `coq-hol-light`
+
+To this end run `nix-build` to test `coq-hol-light-real-with-N` and `nix-build --argstr job coq-hol-light` to test `coq-hol-light`.
 
 If no errors are detected, one can move to the next step.
 
 # Generating the GitHub actions
 To generate the GitHub actions, simply run 
-```
+```bash
 nix-shell --arg do-nothing true --run "genNixActions"
 ```
-This will generate `.github/workflows/nix-action-default.yml`. This file contains three jobs : a job to build Coq, another to build `coq-hol-light-real-with-N` and the last to generate `coq-hol-light`.
+This will generate `.github/workflows/nix-action-default.yml`. This file contains three jobs : a job to build `Rocq`, another to build `coq-hol-light-real-with-N` and the last to generate `coq-hol-light`.
 
 If everything goes well, one will see the following pipeline when you push the new code.
 
