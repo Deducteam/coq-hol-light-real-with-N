@@ -119,3 +119,13 @@ This will generate `.github/workflows/nix-action-default.yml`. This file contain
 
 If everything goes well, one will see the following pipeline when you push the new code.
 
+Optionally, to avoid triggering the pipeline when `.md` files are changed, one can add the following lines to the end of the `.github/workflows/nix-action-default.yml` generated file under section `on.push` :
+```yml
+on
+...
+  push
+  ...
+    paths-ignore:
+    - '**/*.md'
+```
+

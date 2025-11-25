@@ -5,7 +5,7 @@
   bundles.default = {
     coqPackages.coq-hol-light.override.version = "3.0.0";
     coqPackages.rocq-core.override.version = "9.0";
-    push-branches = [ "master" "nixReloaded" ];
+    push-branches = [ "**" ];
   };
   cachix.coq = {};
   ##  cachix.math-comp = {};
