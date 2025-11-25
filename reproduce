@@ -114,10 +114,15 @@ patch_hollight() {
     hol2dk patch
 }
 
+gen_hollight_file() {
+    awk "/^loads \"$1.ml\"/{print;RM=1;next}/^loads /{if(RM)next}{print}" hol_lib.ml > hol_lib_upto_$1.ml
+    sed -e "s/hol_lib.ml/hol_lib_upto_$1.ml/" hol.ml > $hollight_file
+}
+
 dump_proofs() {
     start dump hol-light proofs
     cd hol-light
-    cp ../../$hollight_file ../../`echo $hollight_file | sed -e 's/^hol/hol_lib/'` .
+    gen_hollight_file real
     hol2dk dump-simp$dump_simp_option $hollight_file
     cd ..
 }
