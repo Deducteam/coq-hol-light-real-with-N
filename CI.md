@@ -31,7 +31,7 @@ In the `.nix/config.nix` file one needs to edit the following fields in particul
   default-bundle = "default";
   bundles.default = {
     coqPackages.coq-core.override.version = "9.0";
-    push-branches = [ "master" "nixReloaded" ];
+    push-branches = [ "**" ];
   };
 ```
 Then, run `nix-shell` to check if every thing is ok.
@@ -62,8 +62,11 @@ with lib; mkCoqDerivation {
 ```
 This file tells Nix how to build the `coq-hol-light-real-with-N` package including where to find the sources and package dependencies.
 
-# Creating the `default.nix` file of the reverse dependency
-The objective being to test the reverse dependency of `coq-hol-light-real-with-N`, name `coq-hol-light`, we will create a folder dedicated to this package and explain how to build it from its dependencies.
+# Adding the reverse dependency to coq-hol-light
+A reverse dependency is a package that you want to test every time the current library is changed (specifically, when pushes are made to the branches defined in `.nix/config.nix`).
+This is achieved thanks to the generation of a job in the pipeline that dependents on the one that builds the current library.
+
+In our particular case, the objective is to test the `coq-hol-light` library when `coq-hol-light-real-with-N` is updated. To this end, we will create a folder dedicated to this package and explain how to build it from its dependencies.
 ```bash
 mkdir .nix/coq-overlays/coq-hol-light
 touch .nix/coq-overlays/coq-hol-light/default.nix
@@ -93,8 +96,33 @@ with lib; mkCoqDerivation {
   };
 }
 ```
-This file notably tells Nix where to find the sources of `coq-hol-light` and that `coq-hol-light` depends on `coq-hol-light-real-with-N` which will have as side effect that the `coq-hol-light` job in the pipeline (that we will create in a moment) will be triggered right after the `coq-hol-light-real-with-N` job.
+This file notably tells `Nix` where to find the sources of `coq-hol-light` and that `coq-hol-light` depends on `coq-hol-light-real-with-N` which will have as side effect that the `coq-hol-light` job in the pipeline (that we will create in a moment) will be triggered right after the `coq-hol-light-real-with-N` job.
 
+## Adding more reverse dependencies
+To add more reverse dependencies, first check whether the package of the reverse dependency already has a `Nix` package in the [Nix packages GitHub repo](https://github.com/NixOS/nixpkgs/tree/master/pkgs/development/coq-modules).
+
+If the package does not exist, just repeat the steps describe above for `coq-hol-light`.
+
+Otherwise, simply run `nix-shell --arg do-nothing true --run "fetchCoqOverlay <RevDepPackagename>"` to generate the corresponding `default.nix` under `.nix/coq-overlays/<RevDepPackagename>/` and add a dependency to `coq-hol-light-real-with-N` as described above for `coq-hol-light`.
+
+For illustration, the following describes how to add a reverse dependencies to a package named `MenhirLib`
+```bash
+nix-shell --arg do-nothing true --run "fetchCoqOverlay MenhirLib"
+```
+the edit `nix/coq-overlays/MenhirLib/default.nix` as follows
+```
+{
+  lib,
+  mkCoqDerivation,
+  coq,
+  stdlib,
+  coq-hol-light-real-with-N,
+  version ? null,
+}:
+....
+    propagatedBuildInputs = [ stdlib coq-hol-light-real-with-N ];
+....
+```
 # Testing builds are OK
 Before testing the builds in the GitHub pipeline, it can be useful to test them locally.
 
