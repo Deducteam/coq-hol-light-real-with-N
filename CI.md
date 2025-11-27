@@ -64,7 +64,7 @@ This file tells Nix how to build the `coq-hol-light-real-with-N` package includi
 
 # Adding the reverse dependency to coq-hol-light
 A reverse dependency is a package that you want to test every time the current library is changed (specifically, when pushes are made to the branches defined in `.nix/config.nix`).
-This is achieved thanks to the generation of a job in the pipeline that dependents on the one that builds the current library.
+This is achieved thanks to the generation of a job in the pipeline that depends on the one that builds the current library.
 
 In our particular case, the objective is to test the `coq-hol-light` library when `coq-hol-light-real-with-N` is updated. To this end, we will create a folder dedicated to this package and explain how to build it from its dependencies.
 ```bash
@@ -105,11 +105,11 @@ If the package does not exist, just repeat the steps describe above for `coq-hol
 
 Otherwise, simply run `nix-shell --arg do-nothing true --run "fetchCoqOverlay <RevDepPackagename>"` to generate the corresponding `default.nix` under `.nix/coq-overlays/<RevDepPackagename>/` and add a dependency to `coq-hol-light-real-with-N` as described above for `coq-hol-light`.
 
-For illustration, the following describes how to add a reverse dependencies to a package named `MenhirLib`
+For illustration, the following describes how to add a reverse dependency to a package named `MenhirLib`
 ```bash
 nix-shell --arg do-nothing true --run "fetchCoqOverlay MenhirLib"
 ```
-the edit `nix/coq-overlays/MenhirLib/default.nix` as follows
+then edit `nix/coq-overlays/MenhirLib/default.nix` as follows:
 ```
 {
   lib,
